@@ -23,8 +23,14 @@ describe('AdminAnalyticsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminAnalyticsService,
-        { provide: getRepositoryToken(MedicalClaim), useValue: mockClaimRepository },
-        { provide: getRepositoryToken(Dispute), useValue: mockDisputeRepository },
+        {
+          provide: getRepositoryToken(MedicalClaim),
+          useValue: mockClaimRepository,
+        },
+        {
+          provide: getRepositoryToken(Dispute),
+          useValue: mockDisputeRepository,
+        },
       ],
     }).compile();
 

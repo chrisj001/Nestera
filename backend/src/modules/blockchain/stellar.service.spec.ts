@@ -87,9 +87,7 @@ describe('StellarService', () => {
     const fakeTx = makeFakeTx();
     mockTransactionCall.mockResolvedValue({ records: [fakeTx] });
 
-    const result = await service.getRecentTransactions(
-      TEST_PUBLIC_KEY,
-    );
+    const result = await service.getRecentTransactions(TEST_PUBLIC_KEY);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject<TransactionDto>({
@@ -115,9 +113,7 @@ describe('StellarService', () => {
     });
     mockTransactionCall.mockResolvedValue({ records: [fakeTx] });
 
-    const [tx] = await service.getRecentTransactions(
-      TEST_PUBLIC_KEY,
-    );
+    const [tx] = await service.getRecentTransactions(TEST_PUBLIC_KEY);
 
     expect(tx.token).toBe('USDC');
     expect(tx.amount).toBe('50.0000000');
@@ -129,9 +125,7 @@ describe('StellarService', () => {
       .spyOn(service['logger'], 'error')
       .mockImplementation(() => {});
 
-    const result = await service.getRecentTransactions(
-      TEST_PUBLIC_KEY,
-    );
+    const result = await service.getRecentTransactions(TEST_PUBLIC_KEY);
 
     expect(result).toEqual([]);
     expect(logSpy).toHaveBeenCalled();
@@ -143,9 +137,7 @@ describe('StellarService', () => {
     });
     mockTransactionCall.mockResolvedValue({ records: [fakeTx] });
 
-    const [tx] = await service.getRecentTransactions(
-      TEST_PUBLIC_KEY,
-    );
+    const [tx] = await service.getRecentTransactions(TEST_PUBLIC_KEY);
 
     expect(tx.amount).toBe('0');
     expect(tx.token).toBe('XLM');
@@ -155,10 +147,7 @@ describe('StellarService', () => {
   it('should respect the limit parameter', async () => {
     mockTransactionCall.mockResolvedValue({ records: [] });
 
-    await service.getRecentTransactions(
-      TEST_PUBLIC_KEY,
-      5,
-    );
+    await service.getRecentTransactions(TEST_PUBLIC_KEY, 5);
 
     // Verify executeWithRetry was called with 'horizon' type
     expect(mockRpcClient.executeWithRetry).toHaveBeenCalledWith(
@@ -176,10 +165,7 @@ describe('StellarService', () => {
             val: {
               contractData: () => ({
                 val: () =>
-                  nativeToScVal(
-                    TEST_DELEGATE_KEY,
-                    { type: 'address' },
-                  ),
+                  nativeToScVal(TEST_DELEGATE_KEY, { type: 'address' }),
               }),
             },
           }),
@@ -188,11 +174,9 @@ describe('StellarService', () => {
         return operation(fakeRpcServer as any);
       });
 
-    await expect(
-      service.getDelegationForUser(
-        TEST_PUBLIC_KEY,
-      ),
-    ).resolves.toBe(TEST_DELEGATE_KEY);
+    await expect(service.getDelegationForUser(TEST_PUBLIC_KEY)).resolves.toBe(
+      TEST_DELEGATE_KEY,
+    );
   });
 
   it('should return null when contract data is missing for all candidate keys', async () => {
@@ -210,9 +194,7 @@ describe('StellarService', () => {
       });
 
     await expect(
-      service.getDelegationForUser(
-        TEST_PUBLIC_KEY,
-      ),
+      service.getDelegationForUser(TEST_PUBLIC_KEY),
     ).resolves.toBeNull();
   });
 });

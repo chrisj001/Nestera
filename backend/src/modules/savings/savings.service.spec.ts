@@ -3,10 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { SavingsService } from './savings.service';
 import { SavingsProduct } from './entities/savings-product.entity';
 import { UserSubscription } from './entities/user-subscription.entity';
-import {
-  SavingsGoal,
-  SavingsGoalStatus,
-} from './entities/savings-goal.entity';
+import { SavingsGoal, SavingsGoalStatus } from './entities/savings-goal.entity';
 import { User } from '../user/entities/user.entity';
 import { SavingsService as BlockchainSavingsService } from '../blockchain/savings.service';
 
@@ -118,7 +115,9 @@ describe('SavingsService', () => {
         percentageComplete: 0,
       }),
     ]);
-    expect(blockchainSavingsService.getUserSavingsBalance).not.toHaveBeenCalled();
+    expect(
+      blockchainSavingsService.getUserSavingsBalance,
+    ).not.toHaveBeenCalled();
   });
 
   it('caps progress at 100 percent', async () => {

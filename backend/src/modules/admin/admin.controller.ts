@@ -24,10 +24,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/kyc/reject')
-  async rejectKyc(
-    @Param('id') userId: string,
-    @Body() dto: RejectKycDto,
-  ) {
+  async rejectKyc(@Param('id') userId: string, @Body() dto: RejectKycDto) {
     if (!userId) {
       throw new BadRequestException('User ID is required');
     }

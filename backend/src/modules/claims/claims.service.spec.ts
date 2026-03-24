@@ -41,8 +41,12 @@ describe('ClaimsService', () => {
     }).compile();
 
     service = module.get<ClaimsService>(ClaimsService);
-    repository = module.get<Repository<MedicalClaim>>(getRepositoryToken(MedicalClaim));
-    hospitalIntegrationService = module.get<HospitalIntegrationService>(HospitalIntegrationService);
+    repository = module.get<Repository<MedicalClaim>>(
+      getRepositoryToken(MedicalClaim),
+    );
+    hospitalIntegrationService = module.get<HospitalIntegrationService>(
+      HospitalIntegrationService,
+    );
   });
 
   it('should be defined', () => {

@@ -11,10 +11,7 @@ import {
   UserSubscription,
   SubscriptionStatus,
 } from './entities/user-subscription.entity';
-import {
-  SavingsGoal,
-  SavingsGoalStatus,
-} from './entities/savings-goal.entity';
+import { SavingsGoal, SavingsGoalStatus } from './entities/savings-goal.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { User } from '../user/entities/user.entity';
@@ -54,7 +51,9 @@ export class SavingsService {
 
   async createProduct(dto: CreateProductDto): Promise<SavingsProduct> {
     if (dto.minAmount > dto.maxAmount) {
-      throw new BadRequestException('minAmount must be less than or equal to maxAmount');
+      throw new BadRequestException(
+        'minAmount must be less than or equal to maxAmount',
+      );
     }
     const product = this.productRepository.create({
       ...dto,
@@ -71,8 +70,14 @@ export class SavingsService {
     if (!product) {
       throw new NotFoundException(`Savings product ${id} not found`);
     }
-    if (dto.minAmount != null && dto.maxAmount != null && dto.minAmount > dto.maxAmount) {
-      throw new BadRequestException('minAmount must be less than or equal to maxAmount');
+    if (
+      dto.minAmount != null &&
+      dto.maxAmount != null &&
+      dto.minAmount > dto.maxAmount
+    ) {
+      throw new BadRequestException(
+        'minAmount must be less than or equal to maxAmount',
+      );
     }
     Object.assign(product, dto);
     return await this.productRepository.save(product);
@@ -100,9 +105,14 @@ export class SavingsService {
   ): Promise<UserSubscription> {
     const product = await this.findOneProduct(productId);
     if (!product.isActive) {
-      throw new BadRequestException('This savings product is not available for subscription');
+      throw new BadRequestException(
+        'This savings product is not available for subscription',
+      );
     }
-    if (amount < Number(product.minAmount) || amount > Number(product.maxAmount)) {
+    if (
+      amount < Number(product.minAmount) ||
+      amount > Number(product.maxAmount)
+    ) {
       throw new BadRequestException(
         `Amount must be between ${product.minAmount} and ${product.maxAmount}`,
       );
@@ -117,7 +127,7 @@ export class SavingsService {
       endDate: product.tenureMonths
         ? (() => {
             const d = new Date();
-            d.setMonth(d.getMonth() + product.tenureMonths!);
+            d.setMonth(d.getMonth() + product.tenureMonths);
             return d;
           })()
         : null,
@@ -149,8 +159,11 @@ export class SavingsService {
     }
 
     const liveVaultBalanceStroops = user?.publicKey
-      ? (await this.blockchainSavingsService.getUserSavingsBalance(user.publicKey))
-          .total
+      ? (
+          await this.blockchainSavingsService.getUserSavingsBalance(
+            user.publicKey,
+          )
+        ).total
       : 0;
 
     return goals.map((goal) =>

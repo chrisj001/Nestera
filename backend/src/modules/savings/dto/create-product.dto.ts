@@ -46,7 +46,10 @@ export class CreateProductDto {
   @Min(0)
   maxAmount: number;
 
-  @ApiPropertyOptional({ example: 12, description: 'Tenure in months (e.g. for fixed)' })
+  @ApiPropertyOptional({
+    example: 12,
+    description: 'Tenure in months (e.g. for fixed)',
+  })
   @IsOptional()
   @IsNumber()
   @Min(1)
@@ -57,4 +60,3 @@ export class CreateProductDto {
   @IsOptional()
   isActive?: boolean;
 }
-

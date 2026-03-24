@@ -25,10 +25,13 @@ export class SavingsService {
   async getUserSavingsBalance(publicKey: string): Promise<SavingsBalance> {
     try {
       const horizonServer = this.stellarService.getHorizonServer();
-      
+
       // Fetch account to get current state
-      const account = await horizonServer.accounts().accountId(publicKey).call();
-      
+      const account = await horizonServer
+        .accounts()
+        .accountId(publicKey)
+        .call();
+
       // For now, return a structure based on available data
       // In a production system, this would query the actual Soroban contract
       const flexibleBalance = 0;
@@ -57,10 +60,16 @@ export class SavingsService {
    * @param asset Optional asset code to filter by (defaults to native XLM)
    * @returns Balance in stroops (smallest unit)
    */
-  async getWalletBalance(publicKey: string, asset: string = 'native'): Promise<number> {
+  async getWalletBalance(
+    publicKey: string,
+    asset: string = 'native',
+  ): Promise<number> {
     try {
       const horizonServer = this.stellarService.getHorizonServer();
-      const account = await horizonServer.accounts().accountId(publicKey).call();
+      const account = await horizonServer
+        .accounts()
+        .accountId(publicKey)
+        .call();
 
       if (asset === 'native') {
         // Return native balance in stroops (1 XLM = 10,000,000 stroops)
@@ -71,7 +80,7 @@ export class SavingsService {
       const assetBalance = account.balances.find(
         (balance) => 'asset_code' in balance && balance.asset_code === asset,
       );
-      
+
       if (assetBalance && 'balance' in assetBalance) {
         return Math.floor(parseFloat(assetBalance.balance) * 10_000_000);
       }

@@ -29,7 +29,11 @@ export class UserSubscription {
   @Column('decimal', { precision: 14, scale: 2 })
   amount: number;
 
-  @Column({ type: 'enum', enum: SubscriptionStatus, default: SubscriptionStatus.ACTIVE })
+  @Column({
+    type: 'enum',
+    enum: SubscriptionStatus,
+    default: SubscriptionStatus.ACTIVE,
+  })
   status: SubscriptionStatus;
 
   @Column({ type: 'date' })
@@ -44,7 +48,9 @@ export class UserSubscription {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => SavingsProduct, (product) => product.subscriptions, { eager: true })
+  @ManyToOne(() => SavingsProduct, (product) => product.subscriptions, {
+    eager: true,
+  })
   @JoinColumn({ name: 'productId' })
   product: SavingsProduct;
 }

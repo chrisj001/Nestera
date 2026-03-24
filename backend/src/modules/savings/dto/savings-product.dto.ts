@@ -19,6 +19,9 @@ export class SavingsProductDto {
   @ApiProperty({ description: 'Total value locked as a JS Number' })
   tvlAmount: number;
 
-  @ApiPropertyOptional({ description: 'Total value locked as a formatted string (e.g. "1,234,567.89")' })
+  @ApiPropertyOptional({
+    description:
+      'Total value locked as a formatted string (e.g. "1,234,567.89")',
+  })
   tvlAmountFormatted?: string;
 }

@@ -37,14 +37,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (isRpcFallbackError(exception)) {
       const isTimeout = RPC_TIMEOUT_PATTERN.test(exception.message);
       const httpStatus = isTimeout
-        ? HttpStatus.GATEWAY_TIMEOUT   // 504 – a single endpoint timed out
+        ? HttpStatus.GATEWAY_TIMEOUT // 504 – a single endpoint timed out
         : HttpStatus.SERVICE_UNAVAILABLE; // 503 – all fallbacks exhausted
 
       this.logger.error(
         `[RPC Fallback] ${request.method} ${request.url} → ${httpStatus} | ${exception.message}`,
         exception.stack,
         {
-          errorCode: isTimeout ? 'SOROBAN_RPC_TIMEOUT' : 'SOROBAN_RPC_EXHAUSTED',
+          errorCode: isTimeout
+            ? 'SOROBAN_RPC_TIMEOUT'
+            : 'SOROBAN_RPC_EXHAUSTED',
           path: request.url,
           method: request.method,
           timestamp: new Date().toISOString(),
@@ -110,4 +112,3 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).json(errorResponse);
   }
 }
-

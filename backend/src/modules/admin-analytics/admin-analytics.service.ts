@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MedicalClaim, ClaimStatus } from '../claims/entities/medical-claim.entity';
+import {
+  MedicalClaim,
+  ClaimStatus,
+} from '../claims/entities/medical-claim.entity';
 import { Dispute, DisputeStatus } from '../disputes/entities/dispute.entity';
 import { AnalyticsOverviewDto } from './dto/analytics-overview.dto';
 
@@ -23,10 +26,16 @@ export class AdminAnalyticsService {
       claimAmountResult,
     ] = await Promise.all([
       this.claimRepository.count({
-        where: [{ status: ClaimStatus.APPROVED }, { status: ClaimStatus.REJECTED }],
+        where: [
+          { status: ClaimStatus.APPROVED },
+          { status: ClaimStatus.REJECTED },
+        ],
       }),
       this.disputeRepository.count({
-        where: [{ status: DisputeStatus.OPEN }, { status: DisputeStatus.UNDER_REVIEW }],
+        where: [
+          { status: DisputeStatus.OPEN },
+          { status: DisputeStatus.UNDER_REVIEW },
+        ],
       }),
       this.claimRepository.count({ where: { status: ClaimStatus.PENDING } }),
       this.claimRepository.count(),

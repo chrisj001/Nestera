@@ -81,7 +81,9 @@ export class AuthService {
     return { nonce };
   }
 
-  async verifySignature(dto: VerifySignatureDto): Promise<{ accessToken: string }> {
+  async verifySignature(
+    dto: VerifySignatureDto,
+  ): Promise<{ accessToken: string }> {
     const { publicKey, signature, nonce } = dto;
 
     // Validate public key format
@@ -95,11 +97,17 @@ export class AuthService {
     const storedNonce = nonce; // Temporarily bypass cache for testing
 
     if (!storedNonce) {
-      throw new UnauthorizedException('Nonce not found or expired. Request a new nonce.');
+      throw new UnauthorizedException(
+        'Nonce not found or expired. Request a new nonce.',
+      );
     }
 
     // Verify signature
-    const isValidSignature = this.verifyWalletSignature(publicKey, signature, storedNonce);
+    const isValidSignature = this.verifyWalletSignature(
+      publicKey,
+      signature,
+      storedNonce,
+    );
 
     if (!isValidSignature) {
       throw new UnauthorizedException('Invalid signature');
@@ -170,7 +178,11 @@ export class AuthService {
     };
   }
 
-  private verifyWalletSignature(publicKey: string, signature: string, nonce: string): boolean {
+  private verifyWalletSignature(
+    publicKey: string,
+    signature: string,
+    nonce: string,
+  ): boolean {
     try {
       // Convert public key string to Keypair
       const keypair = StellarSdk.Keypair.fromPublicKey(publicKey);
@@ -185,4 +197,3 @@ export class AuthService {
     }
   }
 }
-

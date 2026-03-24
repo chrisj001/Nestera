@@ -10,12 +10,9 @@ import { MedicalClaim } from '../claims/entities/medical-claim.entity';
 
 @Global()
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([ProcessedStellarEvent, MedicalClaim]),
-  ],
+  imports: [TypeOrmModule.forFeature([ProcessedStellarEvent, MedicalClaim])],
   controllers: [BlockchainController, StellarEventListenerController],
   providers: [StellarService, SavingsService, StellarEventListenerService],
   exports: [StellarService, SavingsService, StellarEventListenerService],
 })
-export class BlockchainModule { }
-
+export class BlockchainModule {}

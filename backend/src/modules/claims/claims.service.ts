@@ -13,7 +13,7 @@ export class ClaimsService {
     @InjectRepository(MedicalClaim)
     private readonly claimsRepository: Repository<MedicalClaim>,
     private readonly hospitalIntegrationService: HospitalIntegrationService,
-  ) { }
+  ) {}
 
   async createClaim(createClaimDto: CreateClaimDto): Promise<MedicalClaim> {
     const claim = this.claimsRepository.create({
@@ -40,15 +40,20 @@ export class ClaimsService {
       throw new Error('Claim not found');
     }
 
-    this.logger.log(`Verifying claim ${claimId} with hospital ${claim.hospitalId}`);
+    this.logger.log(
+      `Verifying claim ${claimId} with hospital ${claim.hospitalId}`,
+    );
 
     try {
-      const verification = await this.hospitalIntegrationService.verifyClaimWithHospital(
-        claim.hospitalId,
-        claimId,
-      );
+      const verification =
+        await this.hospitalIntegrationService.verifyClaimWithHospital(
+          claim.hospitalId,
+          claimId,
+        );
 
-      claim.status = verification.verified ? ClaimStatus.APPROVED : ClaimStatus.REJECTED;
+      claim.status = verification.verified
+        ? ClaimStatus.APPROVED
+        : ClaimStatus.REJECTED;
       claim.notes = verification.notes || claim.notes;
 
       return await this.claimsRepository.save(claim);
@@ -59,10 +64,16 @@ export class ClaimsService {
   }
 
   async fetchHospitalClaimData(hospitalId: string, claimId: string) {
-    return await this.hospitalIntegrationService.fetchClaimData(hospitalId, claimId);
+    return await this.hospitalIntegrationService.fetchClaimData(
+      hospitalId,
+      claimId,
+    );
   }
 
   async fetchPatientHistory(hospitalId: string, patientId: string) {
-    return await this.hospitalIntegrationService.fetchPatientHistory(hospitalId, patientId);
+    return await this.hospitalIntegrationService.fetchPatientHistory(
+      hospitalId,
+      patientId,
+    );
   }
 }
