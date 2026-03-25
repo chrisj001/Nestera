@@ -2,10 +2,53 @@ import React from "react";
 import { Landmark, Search, ChevronDown, LayoutGrid, List } from "lucide-react";
 import FeaturedGoalCard from "@/app/components/dashboard/FeaturedGoalCard";
 import GoalOverviewCard from "@/app/components/dashboard/GoalOverviewCard";
+import GoalCard, { type GoalStatus } from "@/app/components/dashboard/GoalCard";
 
 export const metadata = { title: "Goal-Based Savings – Nestera" };
 
 export default function GoalBasedSavingsPage() {
+  const goals: Array<{
+    title: string;
+    category: string;
+    currentAmount: number;
+    targetAmount: number;
+    targetDate: string;
+    status: GoalStatus;
+  }> = [
+    {
+      title: "Emergency Fund",
+      category: "Security",
+      currentAmount: 5200,
+      targetAmount: 10000,
+      targetDate: "Sep 30, 2025",
+      status: "On Track",
+    },
+    {
+      title: "New Laptop",
+      category: "Tech",
+      currentAmount: 950,
+      targetAmount: 1800,
+      targetDate: "Dec 20, 2025",
+      status: "At Risk",
+    },
+    {
+      title: "Home Down Payment",
+      category: "Housing",
+      currentAmount: 14200,
+      targetAmount: 25000,
+      targetDate: "Jun 01, 2026",
+      status: "On Track",
+    },
+    {
+      title: "Conference Trip",
+      category: "Travel",
+      currentAmount: 1200,
+      targetAmount: 2500,
+      targetDate: "Oct 18, 2025",
+      status: "Paused",
+    },
+  ];
+
   return (
     <div className="w-full max-w-7xl mx-auto pb-20">
       {/* Page Header */}
@@ -101,17 +144,33 @@ export default function GoalBasedSavingsPage() {
       {/* Section Divider / Goals Grid Placeholder */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-white m-0">All Goals</h3>
-        <span className="text-[#5e8c96] text-sm">Showing 1 of 1 goal</span>
+        <span className="text-[#5e8c96] text-sm">Showing {goals.length} goals</span>
       </div>
 
-      {/* Grid Placeholder */}
+      {/* Goals Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="aspect-[4/3] rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-[#4e7a86] bg-white/[0.01] hover:bg-white/[0.02] transition-colors cursor-pointer group">
-              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <span className="text-3xl">+</span>
-              </div>
-              <p className="font-semibold m-0">Create another goal</p>
+        {goals.map((goal) => (
+          <GoalCard
+            key={goal.title}
+            title={goal.title}
+            category={goal.category}
+            currentAmount={goal.currentAmount}
+            targetAmount={goal.targetAmount}
+            targetDate={goal.targetDate}
+            status={goal.status}
+            href="#"
+          />
+        ))}
+
+        <a
+          href="/savings/create-goal"
+          className="aspect-[4/3] rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-[#4e7a86] bg-white/[0.01] hover:bg-white/[0.02] transition-colors cursor-pointer group"
+        >
+          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <span className="text-3xl">+</span>
           </div>
+          <p className="font-semibold m-0">Create another goal</p>
+        </a>
       </div>
     </div>
   );
