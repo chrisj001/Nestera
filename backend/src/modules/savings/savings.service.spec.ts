@@ -18,7 +18,7 @@ describe('SavingsService', () => {
     findOneBy: jest.Mock;
   };
   let subscriptionRepository: { find: jest.Mock };
-  let goalRepository: { find: jest.Mock };
+  let goalRepository: { find: jest.Mock; create: jest.Mock; save: jest.Mock };
   let userRepository: { findOne: jest.Mock };
   let blockchainSavingsService: {
     getUserSavingsBalance: jest.Mock;
@@ -39,6 +39,8 @@ describe('SavingsService', () => {
 
     goalRepository = {
       find: jest.fn(),
+      create: jest.fn((value) => value),
+      save: jest.fn(),
     };
 
     userRepository = {
@@ -299,5 +301,134 @@ describe('SavingsService', () => {
     );
 
     expect(cacheManager.del).toHaveBeenCalledWith('pools_all');
+  });
+
+  describe('createGoal', () => {
+    it('should create a goal with valid future date', async () => {
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+
+      const mockGoal = {
+        id: 'goal-1',
+        userId: 'user-1',
+        goalName: 'Buy a Car',
+        targetAmount: 50000,
+        targetDate: futureDate,
+        status: SavingsGoalStatus.IN_PROGRESS,
+        metadata: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      goalRepository.create.mockReturnValue(mockGoal);
+      goalRepository.save.mockResolvedValue(mockGoal);
+
+      const result = await service.createGoal(
+        'user-1',
+        'Buy a Car',
+        50000,
+        futureDate,
+      );
+
+      expect(goalRepository.create).toHaveBeenCalledWith({
+        userId: 'user-1',
+        goalName: 'Buy a Car',
+        targetAmount: 50000,
+        targetDate: futureDate,
+        metadata: null,
+        status: SavingsGoalStatus.IN_PROGRESS,
+      });
+      expect(goalRepository.save).toHaveBeenCalledWith(mockGoal);
+      expect(result).toEqual(mockGoal);
+    });
+
+    it('should create a goal with metadata', async () => {
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+
+      const metadata = {
+        imageUrl: 'https://cdn.nestera.io/goals/car.jpg',
+        iconRef: 'car-icon',
+        color: '#4F46E5',
+      };
+
+      const mockGoal = {
+        id: 'goal-2',
+        userId: 'user-1',
+        goalName: 'Vacation',
+        targetAmount: 10000,
+        targetDate: futureDate,
+        status: SavingsGoalStatus.IN_PROGRESS,
+        metadata,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      goalRepository.create.mockReturnValue(mockGoal);
+      goalRepository.save.mockResolvedValue(mockGoal);
+
+      const result = await service.createGoal(
+        'user-1',
+        'Vacation',
+        10000,
+        futureDate,
+        metadata,
+      );
+
+      expect(goalRepository.create).toHaveBeenCalledWith({
+        userId: 'user-1',
+        goalName: 'Vacation',
+        targetAmount: 10000,
+        targetDate: futureDate,
+        metadata,
+        status: SavingsGoalStatus.IN_PROGRESS,
+      });
+      expect(result.metadata).toEqual(metadata);
+    });
+
+    it('should throw BadRequestException when target date is in the past', async () => {
+      const pastDate = new Date('2020-01-01');
+
+      await expect(
+        service.createGoal('user-1', 'Past Goal', 5000, pastDate),
+      ).rejects.toThrow('Target date must be in the future');
+    });
+
+    it('should throw BadRequestException when target date is today', async () => {
+      const today = new Date();
+
+      await expect(
+        service.createGoal('user-1', 'Today Goal', 5000, today),
+      ).rejects.toThrow('Target date must be in the future');
+    });
+
+    it('should accept a date exactly one day in the future', async () => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const mockGoal = {
+        id: 'goal-3',
+        userId: 'user-1',
+        goalName: 'Tomorrow Goal',
+        targetAmount: 1000,
+        targetDate: tomorrow,
+        status: SavingsGoalStatus.IN_PROGRESS,
+        metadata: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      goalRepository.create.mockReturnValue(mockGoal);
+      goalRepository.save.mockResolvedValue(mockGoal);
+
+      const result = await service.createGoal(
+        'user-1',
+        'Tomorrow Goal',
+        1000,
+        tomorrow,
+      );
+
+      expect(result).toEqual(mockGoal);
+    });
   });
 });
