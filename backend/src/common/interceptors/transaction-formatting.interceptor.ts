@@ -22,7 +22,7 @@ interface AssetConfig {
  */
 const ASSET_CONFIGS: Record<string, AssetConfig> = {
   // USDC on Stellar (Circle)
-  'CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA': {
+  CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA: {
     decimals: 7,
     symbol: 'USDC',
     displaySymbol: '$',
@@ -52,9 +52,7 @@ export class TransactionFormattingInterceptor implements NestInterceptor {
    * Intercept and enrich transaction responses
    */
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    return next.handle().pipe(
-      map((data) => this.formatTransactionData(data)),
-    );
+    return next.handle().pipe(map((data) => this.formatTransactionData(data)));
   }
 
   /**
@@ -75,7 +73,7 @@ export class TransactionFormattingInterceptor implements NestInterceptor {
 
       // Recursively format nested objects
       for (const key in formatted) {
-        if (formatted.hasOwnProperty(key)) {
+        if (Object.hasOwn(formatted, key)) {
           formatted[key] = this.formatTransactionData(formatted[key]);
         }
       }
