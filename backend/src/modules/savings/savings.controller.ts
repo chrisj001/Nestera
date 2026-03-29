@@ -156,7 +156,10 @@ export class SavingsController {
     description: 'Withdrawal request created',
     type: WithdrawalResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid request or insufficient balance' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request or insufficient balance',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Subscription not found' })
   async withdraw(

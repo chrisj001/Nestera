@@ -49,6 +49,11 @@ export default () => ({
     pass: process.env.MAIL_PASS,
     from: process.env.MAIL_FROM || '"Nestera" <noreply@nestera.io>',
   },
+  kyc: {
+    providerBaseUrl: process.env.KYC_PROVIDER_BASE_URL,
+    providerApiKey: process.env.KYC_PROVIDER_API_KEY,
+    piiEncryptionKey: process.env.KYC_PII_ENCRYPTION_KEY,
+  },
   hospital: {
     endpoints: {
       // Hospital endpoints from environment variables

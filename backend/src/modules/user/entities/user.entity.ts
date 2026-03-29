@@ -35,6 +35,9 @@ export class User {
   @Column({ type: 'varchar', default: 'NOT_SUBMITTED' })
   kycStatus: 'NOT_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
 
+  @Column({ type: 'varchar', default: 'FREE' })
+  tier: 'FREE' | 'VERIFIED' | 'PREMIUM' | 'ENTERPRISE';
+
   @Column({ nullable: true })
   kycDocumentUrl: string;
 

@@ -8,7 +8,11 @@ import {
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
-import { SavingsProduct, SavingsProductType, RiskLevel } from './entities/savings-product.entity';
+import {
+  SavingsProduct,
+  SavingsProductType,
+  RiskLevel,
+} from './entities/savings-product.entity';
 import {
   UserSubscription,
   SubscriptionStatus,
@@ -477,10 +481,7 @@ export class SavingsService {
     }
 
     // Calculate penalty for early withdrawal from locked (FIXED) products
-    const penalty = this.calculateEarlyWithdrawalPenalty(
-      subscription,
-      amount,
-    );
+    const penalty = this.calculateEarlyWithdrawalPenalty(subscription, amount);
     const netAmount = Number((amount - penalty).toFixed(7));
 
     // Estimated completion: 1 hour for processing

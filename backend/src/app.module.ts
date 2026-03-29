@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
@@ -17,6 +18,9 @@ import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
 import { BlockchainModule } from './modules/blockchain/blockchain.module';
 import { UserModule } from './modules/user/user.module';
+import { KycModule } from './modules/kyc/kyc.module';
+import { ChallengesModule } from './modules/challenges/challenges.module';
+import { AlertsModule } from './modules/alerts/alerts.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { MailModule } from './modules/mail/mail.module';
 import { RedisCacheModule } from './modules/cache/cache.module';
@@ -66,6 +70,9 @@ const envValidationSchema = Joi.object({
   MAIL_USER: Joi.string().optional(),
   MAIL_PASS: Joi.string().optional(),
   MAIL_FROM: Joi.string().optional(),
+  KYC_PROVIDER_BASE_URL: Joi.string().uri().optional(),
+  KYC_PROVIDER_API_KEY: Joi.string().optional(),
+  KYC_PII_ENCRYPTION_KEY: Joi.string().min(16).optional(),
 });
 
 @Module({
@@ -114,6 +121,7 @@ const envValidationSchema = Joi.object({
       },
     }),
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
@@ -154,6 +162,9 @@ const envValidationSchema = Joi.object({
     HealthModule,
     BlockchainModule,
     UserModule,
+    KycModule,
+    ChallengesModule,
+    AlertsModule,
     AdminModule,
     MailModule,
     WebhooksModule,
