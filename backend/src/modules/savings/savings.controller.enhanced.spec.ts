@@ -17,6 +17,7 @@ import { SavingsGoal } from './entities/savings-goal.entity';
 import { User } from '../user/entities/user.entity';
 import { SavingsService as BlockchainSavingsService } from '../blockchain/savings.service';
 import { PredictiveEvaluatorService } from './services/predictive-evaluator.service';
+import { RecommendationService } from './services/recommendation.service';
 import { WithdrawalRequest } from './entities/withdrawal-request.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
 import { RpcThrottleGuard } from '../../common/guards/rpc-throttle.guard';

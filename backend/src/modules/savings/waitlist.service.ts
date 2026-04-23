@@ -5,9 +5,12 @@ import {
   Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { WaitlistEntry } from './entities/waitlist-entry.entity';
-import { WaitlistEvent, WaitlistEventType } from './entities/waitlist-event.entity';
+import {
+  WaitlistEvent,
+  WaitlistEventType,
+} from './entities/waitlist-event.entity';
 import { SavingsProduct } from './entities/savings-product.entity';
 import { User } from '../user/entities/user.entity';
 
@@ -169,8 +172,8 @@ export class WaitlistService {
     // Let's find their most recent NOTIFY or JOIN event for this product.
     const lastEvent = await this.eventRepo.findOne({
       where: [
-        { userId, productId, type: 'NOTIFY' as WaitlistEventType },
-        { userId, productId, type: 'JOIN' as WaitlistEventType },
+        { userId, productId, type: 'NOTIFY' },
+        { userId, productId, type: 'JOIN' },
       ],
       order: { createdAt: 'DESC' },
     });
@@ -194,7 +197,13 @@ export class WaitlistService {
 
     // Attempt to remove their active waitlist entry if they somehow subbed while pending
     try {
-      await this.waitlistRepo.delete({ userId, productId, notifiedAt: null });
-    } catch (e) {}
+      await this.waitlistRepo.delete({
+        userId,
+        productId,
+        notifiedAt: IsNull(),
+      });
+    } catch (e) {
+      void e;
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-interface HealthCheckResult {
+export interface HealthCheckResult {
   service: string;
   status: 'up' | 'down' | 'degraded';
   responseTime: number;

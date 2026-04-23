@@ -38,7 +38,7 @@ class ImageTypeValidator extends FileValidator {
     super({});
   }
 
-  isValid(file: Express.Multer.File): boolean {
+  isValid(file: any): boolean {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     return allowedTypes.includes(file.mimetype);
   }
@@ -53,7 +53,7 @@ class KycDocumentValidator extends FileValidator {
     super({});
   }
 
-  isValid(file: Express.Multer.File): boolean {
+  isValid(file: any): boolean {
     const allowedTypes = ['application/pdf', 'image/jpeg'];
     return allowedTypes.includes(file.mimetype);
   }
@@ -188,7 +188,7 @@ export class UserController {
         ],
       }),
     )
-    file: Express.Multer.File,
+    file: any,
   ) {
     const avatarUrl = await this.storageService.saveFile(file);
     return this.userService.updateAvatar(user.id, avatarUrl);
@@ -206,7 +206,7 @@ export class UserController {
         ],
       }),
     )
-    file: Express.Multer.File,
+    file: any,
   ) {
     const kycDocumentUrl = await this.storageService.saveFile(file);
     return this.userService.updateKycDocument(user.id, kycDocumentUrl);

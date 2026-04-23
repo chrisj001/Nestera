@@ -68,11 +68,11 @@ export class CacheStrategyService {
 
   async invalidateByTag(tag: string): Promise<void> {
     try {
-      const keys = await this.cacheManager.store.keys();
-      const keysToDelete = keys.filter((k) => k.includes(tag));
+      const keys = Array.from(this.cacheManager.stores.keys());
+      const keysToDelete = keys.filter((k) => k.toString().includes(tag));
 
       for (const key of keysToDelete) {
-        await this.del(key);
+        await this.del(key.toString());
       }
 
       this.logger.debug(

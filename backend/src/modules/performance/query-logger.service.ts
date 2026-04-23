@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource, QueryRunner } from 'typeorm';
 
-interface QueryMetrics {
+export interface QueryMetrics {
   query: string;
   duration: number;
   timestamp: Date;
@@ -27,7 +27,7 @@ export class QueryLoggerService {
       if (subscriber.beforeQuery) {
         const originalBeforeQuery = subscriber.beforeQuery.bind(subscriber);
         subscriber.beforeQuery = (event) => {
-          event.startTime = Date.now();
+          (event as any).startTime = Date.now();
           return originalBeforeQuery(event);
         };
       }
@@ -35,7 +35,8 @@ export class QueryLoggerService {
       if (subscriber.afterQuery) {
         const originalAfterQuery = subscriber.afterQuery.bind(subscriber);
         subscriber.afterQuery = (event) => {
-          const duration = Date.now() - (event.startTime || Date.now());
+          const duration =
+            Date.now() - ((event as any).startTime || Date.now());
 
           if (duration > this.slowQueryThreshold) {
             this.recordSlowQuery({

@@ -21,9 +21,6 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { EditProposalDto } from './dto/edit-proposal.dto';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CastVoteDto } from './dto/cast-vote.dto';
 import { ProposalListItemDto } from './dto/proposal-list-item.dto';
 import { ProposalResponseDto } from './dto/proposal-response.dto';
@@ -128,7 +125,8 @@ export class GovernanceProposalsController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Cast a vote on an active proposal',
-    description: 'Allows a user to cast a weighted vote (for/against/abstain) on an active proposal. Voting power is calculated based on lifetime deposits.',
+    description:
+      'Allows a user to cast a weighted vote (for/against/abstain) on an active proposal. Voting power is calculated based on lifetime deposits.',
   })
   @ApiResponse({
     status: 201,
@@ -172,4 +170,3 @@ export class GovernanceProposalsController {
     return this.governanceService.getProposalVotesByOnChainId(id, page);
   }
 }
-

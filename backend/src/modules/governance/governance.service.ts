@@ -6,10 +6,8 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StellarService } from '../blockchain/stellar.service';
 import { SavingsService } from '../blockchain/savings.service';
 import { TransactionsService } from '../transactions/transactions.service';
@@ -291,28 +289,6 @@ export class GovernanceService {
       maximumFractionDigits: 0,
     });
     return { votingPower: `${formattedVotingPower} NST` };
-
-    // Calculate voting power based on lifetime deposits
-    // Requirement: "Calculate voting power based on lifetime deposits"
-    const result = await this.transactionRepo
-      .createQueryBuilder('tx')
-      .select('SUM(CAST(tx.amount AS decimal))', 'total')
-      .where('tx.userId = :userId', { userId })
-      .andWhere('tx.type = :type', { type: TxType.DEPOSIT })
-      .andWhere('tx.status = :status', { status: TxStatus.COMPLETED })
-      .getRawOne();
-
-    const totalDeposits = parseFloat(result?.total || '0');
-    
-    // 1 NST per 10,000,000 stroops (assuming stroops based on current implementation)
-    // Or if amount is already in human-readable, we just use it.
-    // Looking at current implementation: (balance / 10_000_000)
-    const votingPower = Math.floor(totalDeposits / 10_000_000).toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-    
-    return { votingPower: `${votingPower} NST` };
   }
 
   async castVote(
@@ -391,7 +367,7 @@ export class GovernanceService {
 
     // In a real app, we'd update the contract on-chain via StellarService
     // and potentially store it in our DB if needed.
-    
+
     return { transactionHash: mockTxHash };
   }
 

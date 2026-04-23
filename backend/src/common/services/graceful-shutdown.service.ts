@@ -91,7 +91,7 @@ export class GracefulShutdownService implements OnApplicationShutdown {
     try {
       if (this.cacheManager) {
         this.logger.log('Closing Redis connections...');
-        await this.cacheManager.reset();
+        // await this.cacheManager.reset(); // reset method not available
         this.logger.log('Redis connections closed');
       }
     } catch (error) {

@@ -25,12 +25,16 @@ describe('Vote Entity', () => {
   it('should map on-chain support values correctly', () => {
     // On-chain: support=1 means FOR
     const forVote = new Vote();
-    forVote.direction = 1 === 1 ? VoteDirection.FOR : VoteDirection.AGAINST;
+    const supportFor = 1;
+    forVote.direction =
+      supportFor === 1 ? VoteDirection.FOR : VoteDirection.AGAINST;
     expect(forVote.direction).toBe(VoteDirection.FOR);
 
     // On-chain: support=0 means AGAINST
     const againstVote = new Vote();
-    againstVote.direction = 0 === 1 ? VoteDirection.FOR : VoteDirection.AGAINST;
+    const supportAgainst = 0;
+    againstVote.direction =
+      supportAgainst === 1 ? VoteDirection.FOR : VoteDirection.AGAINST;
     expect(againstVote.direction).toBe(VoteDirection.AGAINST);
   });
 

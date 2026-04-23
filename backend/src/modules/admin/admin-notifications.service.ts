@@ -2,7 +2,10 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Notification } from '../notifications/entities/notification.entity';
+import {
+  Notification,
+  NotificationType,
+} from '../notifications/entities/notification.entity';
 import { User } from '../user/entities/user.entity';
 import {
   UserSubscription,
@@ -74,7 +77,7 @@ export class AdminNotificationsService {
 
         // Send email
         if (channels.includes(NotificationChannel.EMAIL) && user.email) {
-          await this.mailService.sendNotificationEmail(
+          await this.mailService.sendRawMail(
             user.email,
             dto.title,
             dto.message,

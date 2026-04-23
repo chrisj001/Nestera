@@ -32,14 +32,17 @@ describe('GovernanceNotificationScheduler', () => {
     notificationsService = { dispatchNotification: jest.fn() };
     mailService = { sendGovernanceEmail: jest.fn() };
     stellarService = { getRpcServer: jest.fn() };
-    
+
     pendingRepo = { find: jest.fn(), update: jest.fn(), create: jest.fn() };
     preferenceRepo = { find: jest.fn() };
-    userRepo = { findOne: jest.fn(), createQueryBuilder: jest.fn(() => ({
-      innerJoin: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      getMany: jest.fn(),
-    })) };
+    userRepo = {
+      findOne: jest.fn(),
+      createQueryBuilder: jest.fn(() => ({
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getMany: jest.fn(),
+      })),
+    };
     proposalRepo = { find: jest.fn() };
     voteRepo = { find: jest.fn() };
 
@@ -49,25 +52,42 @@ describe('GovernanceNotificationScheduler', () => {
         { provide: NotificationsService, useValue: notificationsService },
         { provide: MailService, useValue: mailService },
         { provide: StellarService, useValue: stellarService },
-        { provide: getRepositoryToken(PendingNotification), useValue: pendingRepo },
-        { provide: getRepositoryToken(NotificationPreference), useValue: preferenceRepo },
+        {
+          provide: getRepositoryToken(PendingNotification),
+          useValue: pendingRepo,
+        },
+        {
+          provide: getRepositoryToken(NotificationPreference),
+          useValue: preferenceRepo,
+        },
         { provide: getRepositoryToken(User), useValue: userRepo },
-        { provide: getRepositoryToken(GovernanceProposal), useValue: proposalRepo },
+        {
+          provide: getRepositoryToken(GovernanceProposal),
+          useValue: proposalRepo,
+        },
         { provide: getRepositoryToken(Vote), useValue: voteRepo },
       ],
     }).compile();
 
-    scheduler = module.get<GovernanceNotificationScheduler>(GovernanceNotificationScheduler);
+    scheduler = module.get<GovernanceNotificationScheduler>(
+      GovernanceNotificationScheduler,
+    );
   });
 
   describe('handleDailyDigest', () => {
     it('should process daily digests for users', async () => {
-      preferenceRepo.find.mockResolvedValue([{ userId: 'user-1', digestFrequency: DigestFrequency.DAILY }]);
+      preferenceRepo.find.mockResolvedValue([
+        { userId: 'user-1', digestFrequency: DigestFrequency.DAILY },
+      ]);
       pendingRepo.find.mockResolvedValue([
         { id: 'p1', title: 'Title 1', message: 'Msg 1' },
         { id: 'p2', title: 'Title 2', message: 'Msg 2' },
       ]);
-      userRepo.findOne.mockResolvedValue({ id: 'user-1', email: 'test@example.com', name: 'Test User' });
+      userRepo.findOne.mockResolvedValue({
+        id: 'user-1',
+        email: 'test@example.com',
+        name: 'Test User',
+      });
 
       await scheduler.handleDailyDigest();
 
@@ -83,13 +103,24 @@ describe('GovernanceNotificationScheduler', () => {
       });
 
       proposalRepo.find.mockResolvedValue([
-        { id: 'prop-1', onChainId: 1, endBlock: 117250, status: ProposalStatus.ACTIVE },
+        {
+          id: 'prop-1',
+          onChainId: 1,
+          endBlock: 117250,
+          status: ProposalStatus.ACTIVE,
+        },
       ]);
 
       voteRepo.find.mockResolvedValue([]); // No one has voted
-      
-      const mockQueryBuilder = userRepo.createQueryBuilder();
-      mockQueryBuilder.getMany.mockResolvedValue([{ id: 'user-2', publicKey: 'G...' }]);
+
+      const mockQueryBuilder = {
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'user-2', publicKey: 'G...' }]),
+      };
+      userRepo.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       await scheduler.handleVotingReminders();
 

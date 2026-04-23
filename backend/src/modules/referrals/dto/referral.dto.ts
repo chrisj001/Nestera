@@ -21,14 +21,21 @@ export class CreateReferralDto {
 }
 
 export class GenerateCustomCodeDto {
-  @ApiPropertyOptional({ description: 'Custom referral code (alphanumeric, 4-12 chars). Auto-generated if omitted.' })
+  @ApiPropertyOptional({
+    description:
+      'Custom referral code (alphanumeric, 4-12 chars). Auto-generated if omitted.',
+  })
   @IsOptional()
   @IsString()
-  @Matches(/^[A-Z0-9]{4,12}$/, { message: 'Code must be 4-12 uppercase alphanumeric characters' })
+  @Matches(/^[A-Z0-9]{4,12}$/, {
+    message: 'Code must be 4-12 uppercase alphanumeric characters',
+  })
   @MaxLength(12)
   code?: string;
 
-  @ApiPropertyOptional({ description: 'Campaign ID to associate with this referral' })
+  @ApiPropertyOptional({
+    description: 'Campaign ID to associate with this referral',
+  })
   @IsOptional()
   @IsUUID()
   campaignId?: string;
@@ -37,38 +44,38 @@ export class GenerateCustomCodeDto {
 export class ApplyReferralCodeDto {
   @ApiProperty({ description: 'Referral code to apply during signup' })
   @IsString()
-  referralCode: string;
+  referralCode!: string;
 }
 
 export class ReferralStatsDto {
   @ApiProperty()
-  referralCode: string;
+  referralCode!: string | null;
 
   @ApiProperty()
-  totalReferrals: number;
+  totalReferrals!: number;
 
   @ApiProperty()
-  successfulReferrals: number;
+  successfulReferrals!: number;
 
   @ApiProperty()
-  pendingRewards: number;
+  pendingRewards!: number;
 
   @ApiProperty()
-  claimedRewards: number;
+  claimedRewards!: number;
 
   @ApiProperty()
-  rank: number | null;
+  rank!: number | null;
 }
 
 export class ReferralResponseDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  referralCode: string;
+  referralCode!: string;
 
   @ApiProperty({ enum: ReferralStatus })
-  status: ReferralStatus;
+  status!: ReferralStatus;
 
   @ApiProperty({ required: false })
   rewardAmount?: string;
@@ -77,7 +84,7 @@ export class ReferralResponseDto {
   refereeEmail?: string;
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({ required: false })
   completedAt?: Date;
@@ -89,7 +96,7 @@ export class ReferralResponseDto {
 export class UpdateReferralStatusDto {
   @ApiProperty({ enum: ReferralStatus })
   @IsEnum(ReferralStatus)
-  status: ReferralStatus;
+  status!: ReferralStatus;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -45,7 +45,6 @@ import { Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { SavingsProductVersionAudit } from './entities/savings-product-version-audit.entity';
-import { Repository } from 'typeorm';
 import { WaitlistService } from './waitlist.service';
 
 export type SavingsGoalProgress = GoalProgressDto;
@@ -189,8 +188,6 @@ export class SavingsService {
       },
     });
     const previousIsActive = product.isActive;
-    Object.assign(product, dto);
-    const updatedProduct = await this.productRepository.save(product);
     await this.syncCapacityState(updatedProduct);
     await this.invalidatePoolsCache();
 
@@ -228,33 +225,6 @@ export class SavingsService {
       relations: ['subscriptions'],
     });
 
-    const dtos: SavingsProductDto[] = products.map((product) => {
-      // Calculate TVL by summing active subscriptions
-      const tvlAmount = product.subscriptions
-        ? product.subscriptions
-            .filter((s) => s.status === SubscriptionStatus.ACTIVE)
-            .reduce((sum, s) => sum + Number(s.amount), 0)
-        : 0;
-
-      return {
-        id: product.id,
-        name: product.name,
-        type: product.type,
-        description: product.description,
-        interestRate: Number(product.interestRate),
-        minAmount: Number(product.minAmount),
-        maxAmount: Number(product.maxAmount),
-        tenureMonths: product.tenureMonths,
-        contractId: product.contractId,
-        isActive: product.isActive,
-        maxSubscriptionsPerUser: product.maxSubscriptionsPerUser,
-        version: product.version ?? 1,
-        riskLevel: product.riskLevel || RiskLevel.LOW,
-        tvlAmount,
-        createdAt: product.createdAt,
-        updatedAt: product.updatedAt,
-      };
-    });
     const dtos: SavingsProductDto[] = await Promise.all(
       products.map(async (product) => {
         // Calculate TVL by summing active subscriptions
@@ -277,6 +247,8 @@ export class SavingsService {
           contractId: product.contractId,
           isActive: product.isActive,
           riskLevel: product.riskLevel || RiskLevel.LOW,
+          maxSubscriptionsPerUser: product.maxSubscriptionsPerUser,
+          version: product.version,
           tvlAmount,
           maxCapacity: capacity.maxCapacity,
           utilizedCapacity: capacity.utilizedCapacity,
@@ -447,19 +419,19 @@ export class SavingsService {
           );
         }
       }
-    const capacity = await this.getProductCapacitySnapshot(productId);
-    if (
-      capacity.maxCapacity != null &&
-      (capacity.isFull || amount > capacity.availableCapacity)
-    ) {
-      const { position } = await this.waitlistService.joinWaitlist(
-        userId,
-        productId,
-      );
-      throw new ConflictException(
-        `This savings product is at capacity. You have been added to the waitlist at position ${position}.`,
-      );
-    }
+      const capacity = await this.getProductCapacitySnapshot(productId);
+      if (
+        capacity.maxCapacity != null &&
+        (capacity.isFull || amount > capacity.availableCapacity)
+      ) {
+        const { position } = await this.waitlistService.joinWaitlist(
+          userId,
+          productId,
+        );
+        throw new ConflictException(
+          `This savings product is at capacity. You have been added to the waitlist at position ${position}.`,
+        );
+      }
     }
 
     const subscription = this.subscriptionRepository.create({
@@ -606,10 +578,7 @@ export class SavingsService {
         : 0;
 
     // Current TVL from active subscriptions
-    const currentTvl = activeSubs.reduce(
-      (sum, s) => sum + Number(s.amount),
-      0,
-    );
+    const currentTvl = activeSubs.reduce((sum, s) => sum + Number(s.amount), 0);
 
     // Risk metrics from APY history
     const apyValues =
@@ -701,8 +670,7 @@ export class SavingsService {
       date,
       tvl:
         Math.round(
-          (items.reduce((s, i) => s + Number(i.tvlAmount), 0) /
-            items.length) *
+          (items.reduce((s, i) => s + Number(i.tvlAmount), 0) / items.length) *
             100,
         ) / 100,
     }));
@@ -750,8 +718,7 @@ export class SavingsService {
 
     // Sharpe ratio: (avg return - risk-free rate) / stdDev
     // Using 0% risk-free rate as a conservative baseline
-    const sharpeRatio =
-      stdDev > 0 ? Math.round((avg / stdDev) * 100) / 100 : 0;
+    const sharpeRatio = stdDev > 0 ? Math.round((avg / stdDev) * 100) / 100 : 0;
 
     return {
       sharpeRatio,

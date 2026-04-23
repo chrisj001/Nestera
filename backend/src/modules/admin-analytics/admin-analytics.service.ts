@@ -2,7 +2,6 @@ import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
-import { Cacheable } from 'typejs-cacheable';
 import {
   MedicalClaim,
   ClaimStatus,
@@ -23,7 +22,10 @@ import {
   TxType,
   TxStatus,
 } from '../transactions/entities/transaction.entity';
-import { DateRangeFilterDto } from '../admin/dto/admin-analytics.dto';
+import {
+  DateRangeFilterDto,
+  DateRange,
+} from '../admin/dto/admin-analytics.dto';
 
 @Injectable()
 export class AdminAnalyticsService {
@@ -204,16 +206,16 @@ export class AdminAnalyticsService {
       fromDate = new Date(filter.fromDate);
     } else {
       switch (filter.range) {
-        case '7d':
+        case DateRange.LAST_7_DAYS:
           fromDate = new Date(toDate.getTime() - 7 * 24 * 60 * 60 * 1000);
           break;
-        case '30d':
+        case DateRange.LAST_30_DAYS:
           fromDate = new Date(toDate.getTime() - 30 * 24 * 60 * 60 * 1000);
           break;
-        case '90d':
+        case DateRange.LAST_90_DAYS:
           fromDate = new Date(toDate.getTime() - 90 * 24 * 60 * 60 * 1000);
           break;
-        case '365d':
+        case DateRange.LAST_365_DAYS:
           fromDate = new Date(toDate.getTime() - 365 * 24 * 60 * 60 * 1000);
           break;
         default:
@@ -227,7 +229,6 @@ export class AdminAnalyticsService {
   /**
    * Get comprehensive platform overview
    */
-  @Cacheable({ cacheable: true, ttl: 300 })
   async getPlatformOverview(): Promise<{
     totalUsers: number;
     activeUsers: number;
@@ -320,7 +321,6 @@ export class AdminAnalyticsService {
   /**
    * Get user analytics - growth, retention, churn metrics
    */
-  @Cacheable({ cacheable: true, ttl: 300 })
   async getUserAnalytics(filter: DateRangeFilterDto): Promise<{
     totalUsers: number;
     newUsers: number;
@@ -434,7 +434,6 @@ export class AdminAnalyticsService {
   /**
    * Get revenue analytics - fees, projections
    */
-  @Cacheable({ cacheable: true, ttl: 300 })
   async getRevenueAnalytics(filter: DateRangeFilterDto): Promise<{
     totalRevenue: number;
     monthlyRevenue: number;
@@ -501,7 +500,7 @@ export class AdminAnalyticsService {
           revenueTrend.length
         : 0;
 
-    const revenueProjection = [];
+    const revenueProjection: Array<{ month: string; projected: number }> = [];
     const currentMonth = new Date();
     for (let i = 1; i <= 3; i++) {
       const projectionDate = new Date(currentMonth);
@@ -524,7 +523,6 @@ export class AdminAnalyticsService {
   /**
    * Get savings analytics - TVL, APY, product performance
    */
-  @Cacheable({ cacheable: true, ttl: 300 })
   async getSavingsAnalytics(filter: DateRangeFilterDto): Promise<{
     totalValueLocked: number;
     avgSavingsPerUser: number;
@@ -588,17 +586,24 @@ export class AdminAnalyticsService {
     const apyDistribution = [
       {
         range: '0-2%',
-        count: products.filter((p) => p.apy >= 0 && p.apy < 2).length,
+        count: products.filter((p) => p.interestRate >= 0 && p.interestRate < 2)
+          .length,
       },
       {
         range: '2-5%',
-        count: products.filter((p) => p.apy >= 2 && p.apy < 5).length,
+        count: products.filter((p) => p.interestRate >= 2 && p.interestRate < 5)
+          .length,
       },
       {
         range: '5-10%',
-        count: products.filter((p) => p.apy >= 5 && p.apy < 10).length,
+        count: products.filter(
+          (p) => p.interestRate >= 5 && p.interestRate < 10,
+        ).length,
       },
-      { range: '10%+', count: products.filter((p) => p.apy >= 10).length },
+      {
+        range: '10%+',
+        count: products.filter((p) => p.interestRate >= 10).length,
+      },
     ];
 
     // Savings growth trend (from ProtocolMetrics)
@@ -628,7 +633,7 @@ export class AdminAnalyticsService {
   /**
    * Get transaction analytics - volume trends
    */
-  @Cacheable({ cacheable: true, ttl: 300 })
+
   async getTransactionAnalytics(filter: DateRangeFilterDto): Promise<{
     totalTransactions: number;
     totalVolume: number;

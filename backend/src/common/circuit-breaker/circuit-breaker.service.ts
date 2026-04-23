@@ -63,7 +63,7 @@ export class CircuitBreakerService {
 
   getMetrics(
     breakerName?: string,
-  ): CircuitBreakerMetrics | Map<string, CircuitBreakerMetrics> {
+  ): CircuitBreakerMetrics | Map<string, CircuitBreakerMetrics> | null {
     if (breakerName) {
       const breaker = this.breakers.get(breakerName);
       return breaker ? breaker.getMetrics() : null;

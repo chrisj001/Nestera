@@ -9,7 +9,8 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
-import { ApiProperty, ApiExample } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { ApiExample } from '../../../common/decorators/api-example.decorator';
 import { SavingsGoalMetadata } from '../entities/savings-goal.entity';
 import { IsFutureDate } from '../../../common/validators/is-future-date.validator';
 
