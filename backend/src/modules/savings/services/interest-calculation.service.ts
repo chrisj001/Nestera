@@ -130,8 +130,7 @@ export class InterestCalculationService {
     }
 
     const interestEarned = parseFloat(dailyInterest.toFixed(7));
-    const currentTotal =
-      parseFloat(subscription.totalInterestEarned as unknown as string) || 0;
+    const currentTotal = parseFloat(subscription.totalInterestEarned) || 0;
     const newTotal = parseFloat((currentTotal + interestEarned).toFixed(7));
 
     await this.dataSource.transaction(async (manager) => {

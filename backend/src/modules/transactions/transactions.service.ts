@@ -242,7 +242,7 @@ export class TransactionsService {
     const txs = await this.transactionRepository.findBy({
       id: body.ids,
       userId,
-    } as any);
+    });
 
     for (const tx of txs) {
       if (body.tags) {

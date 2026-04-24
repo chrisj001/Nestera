@@ -87,13 +87,17 @@ export class UpdateNotificationPreferenceDto {
   @ApiPropertyOptional({ example: '22:00' })
   @IsOptional()
   @IsString()
-  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'quietHoursStart must be HH:MM' })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
+    message: 'quietHoursStart must be HH:MM',
+  })
   quietHoursStart?: string;
 
   @ApiPropertyOptional({ example: '08:00' })
   @IsOptional()
   @IsString()
-  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'quietHoursEnd must be HH:MM' })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
+    message: 'quietHoursEnd must be HH:MM',
+  })
   quietHoursEnd?: string;
 
   @ApiPropertyOptional({ example: 'America/New_York' })

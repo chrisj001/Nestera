@@ -20,7 +20,9 @@ export class GovernanceAnalyticsController {
   }
 
   @Get('proposals')
-  @ApiOperation({ summary: 'Get proposal success rates and category breakdown' })
+  @ApiOperation({
+    summary: 'Get proposal success rates and category breakdown',
+  })
   @ApiResponse({ status: 200, type: ProposalAnalyticsDto })
   async getProposalAnalytics(): Promise<ProposalAnalyticsDto> {
     return this.analyticsService.getProposalAnalytics();
@@ -42,11 +44,17 @@ export class GovernanceAnalyticsController {
 
   @Get('export')
   @ApiOperation({ summary: 'Export governance data for research (JSON)' })
-  @ApiResponse({ status: 200, description: 'JSON download of governance historical data' })
+  @ApiResponse({
+    status: 200,
+    description: 'JSON download of governance historical data',
+  })
   async exportData(@Res() res: Response): Promise<void> {
     const data = await this.analyticsService.exportData();
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', 'attachment; filename=governance-export.json');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=governance-export.json',
+    );
     res.send(JSON.stringify(data, null, 2));
   }
 }

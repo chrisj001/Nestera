@@ -414,12 +414,12 @@ export class BalanceSyncService implements OnModuleInit, OnModuleDestroy {
   private async persistMetrics(): Promise<void> {
     try {
       const summary = this.getMetricsSummary();
-      let record = await this.protocolMetricsRepo.findOne({
+      const record = await this.protocolMetricsRepo.findOne({
         where: {},
         order: { createdAt: 'DESC' },
       });
       if (record) {
-        record.connectionMetrics = summary as any;
+        record.connectionMetrics = summary;
         await this.protocolMetricsRepo.save(record);
       } else {
         const newRecord = this.protocolMetricsRepo.create({
@@ -427,7 +427,7 @@ export class BalanceSyncService implements OnModuleInit, OnModuleDestroy {
           totalValueLockedUsd: 0,
           totalValueLockedXlm: 0,
           savingsProductCount: 0,
-          connectionMetrics: summary as any,
+          connectionMetrics: summary,
         });
         await this.protocolMetricsRepo.save(newRecord);
       }
@@ -445,6 +445,7 @@ export class BalanceSyncService implements OnModuleInit, OnModuleDestroy {
     const value = this.configService.get<T>(key);
     if (value === undefined || value === null) {
       this.logger.warn(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Config key "${key}" is absent. Using default: ${defaultValue}`,
       );
       return defaultValue;

@@ -20,22 +20,22 @@ export class SweepTasksService {
     // Fetch users who have auto-sweep enabled. The UserService method is expected
     // to return users with their sweep preferences. If not present, this should
     // be implemented on the UserService / user entity.
-    const usersWithSweep: any[] =
-      (this.userService as any).findUsersWithAutoSweep
-        ? await (this.userService as any).findUsersWithAutoSweep()
-        : [];
+    const usersWithSweep: any[] = (this.userService as any)
+      .findUsersWithAutoSweep
+      ? await (this.userService as any).findUsersWithAutoSweep()
+      : [];
 
     this.logger.log(`Found ${usersWithSweep.length} users with auto-sweep`);
 
     for (const user of usersWithSweep) {
       try {
-        const threshold = (user as any).sweepThreshold ?? 0;
+        const threshold = user.sweepThreshold ?? 0;
 
         // Attempt to fetch balance from StellarService if available; otherwise
         // fall back to a stubbed value (0) so the job remains safe.
         const balance =
           (this.stellarService as any).getAccountBalance?.(user.publicKey) ??
-          (user as any).mockBalance ??
+          user.mockBalance ??
           0;
 
         const excess = Number(balance) - Number(threshold);

@@ -62,7 +62,10 @@ export class GovernanceController {
   @ApiResponse({
     status: 201,
     description: 'Delegation set',
-    schema: { type: 'object', properties: { transactionHash: { type: 'string' } } },
+    schema: {
+      type: 'object',
+      properties: { transactionHash: { type: 'string' } },
+    },
   })
   @ApiResponse({ status: 400, description: 'Loop detected or invalid address' })
   delegate(
@@ -80,7 +83,9 @@ export class GovernanceController {
   }
 
   @Get('governance/delegation')
-  @ApiOperation({ summary: 'View current delegation and total delegated power' })
+  @ApiOperation({
+    summary: 'View current delegation and total delegated power',
+  })
   @ApiResponse({
     status: 200,
     description: 'Delegation info',

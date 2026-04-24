@@ -21,7 +21,8 @@ export class UserNotificationsController {
 
   @Patch('preferences')
   @ApiOperation({
-    summary: 'Update notification preferences (channels, types, quiet hours, digest frequency)',
+    summary:
+      'Update notification preferences (channels, types, quiet hours, digest frequency)',
   })
   updatePreferences(
     @CurrentUser() user: User,

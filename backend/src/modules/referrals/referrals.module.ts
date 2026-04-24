@@ -22,7 +22,11 @@ import { ReferralEventsListener } from './referral-events.listener';
       Notification,
     ]),
   ],
-  controllers: [ReferralsController, AdminReferralsController, UserReferralsController],
+  controllers: [
+    ReferralsController,
+    AdminReferralsController,
+    UserReferralsController,
+  ],
   providers: [ReferralsService, CampaignsService, ReferralEventsListener],
   exports: [ReferralsService, CampaignsService],
 })

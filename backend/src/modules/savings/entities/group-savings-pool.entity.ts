@@ -115,7 +115,9 @@ export class GroupSavingsPool {
   @OneToMany(() => GroupPoolMember, (member) => member.pool, { cascade: true })
   members: GroupPoolMember[];
 
-  @OneToMany(() => MultiSigWithdrawalRequest, (request) => request.pool, { cascade: true })
+  @OneToMany(() => MultiSigWithdrawalRequest, (request) => request.pool, {
+    cascade: true,
+  })
   withdrawalRequests: MultiSigWithdrawalRequest[];
 
   @OneToMany(() => SignatureEvent, (event) => event.pool, { cascade: true })

@@ -12,7 +12,9 @@ describe('WaitlistController', () => {
         {
           provide: WaitlistService,
           useValue: {
-            joinWaitlist: jest.fn().mockResolvedValue({ entry: { id: '1' }, position: 1 }),
+            joinWaitlist: jest
+              .fn()
+              .mockResolvedValue({ entry: { id: '1' }, position: 1 }),
             getUserEntry: jest.fn().mockResolvedValue({ id: '1' }),
             getPosition: jest.fn().mockResolvedValue(1),
             leaveWaitlist: jest.fn().mockResolvedValue(undefined),

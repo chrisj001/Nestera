@@ -99,6 +99,10 @@ export class MultiSigWithdrawalRequest {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => WithdrawalSignature, (signature) => signature.withdrawalRequest, { cascade: true })
+  @OneToMany(
+    () => WithdrawalSignature,
+    (signature) => signature.withdrawalRequest,
+    { cascade: true },
+  )
   signatures: WithdrawalSignature[];
 }

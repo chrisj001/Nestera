@@ -37,7 +37,9 @@ describe('WaitlistService', () => {
         {
           provide: getRepositoryToken(WaitlistEvent),
           useValue: {
-            findOne: jest.fn().mockResolvedValue({ id: 'event1', entryId: 'entry1' }),
+            findOne: jest
+              .fn()
+              .mockResolvedValue({ id: 'event1', entryId: 'entry1' }),
             create: jest.fn(),
             save: jest.fn(),
           },

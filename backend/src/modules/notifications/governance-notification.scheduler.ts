@@ -77,13 +77,14 @@ export class GovernanceNotificationScheduler {
       const closingSoon = await this.proposalRepo.find({
         where: {
           status: ProposalStatus.ACTIVE,
-          endBlock: MoreThan(latestLedger), // Is this correct? 
+          endBlock: MoreThan(latestLedger), // Is this correct?
           // We want proposals where endBlock is within the reminder window
         },
       });
 
       const relevantProposals = closingSoon.filter(
-        (p) => p.endBlock >= reminderWindowStart && p.endBlock <= reminderWindowEnd,
+        (p) =>
+          p.endBlock >= reminderWindowStart && p.endBlock <= reminderWindowEnd,
       );
 
       for (const proposal of relevantProposals) {
@@ -112,7 +113,10 @@ export class GovernanceNotificationScheduler {
               type: NotificationType.GOVERNANCE_VOTING_REMINDER,
               title: 'Voting Deadline Approaching',
               message: `The voting period for proposal #${proposal.onChainId} ends in less than 24 hours. Don't forget to cast your vote!`,
-              metadata: { onChainId: proposal.onChainId, proposalId: proposal.id },
+              metadata: {
+                onChainId: proposal.onChainId,
+                proposalId: proposal.id,
+              },
             });
           }
         }
@@ -139,7 +143,9 @@ export class GovernanceNotificationScheduler {
 
         if (pending.length === 0) continue;
 
-        const user = await this.userRepo.findOne({ where: { id: pref.userId } });
+        const user = await this.userRepo.findOne({
+          where: { id: pref.userId },
+        });
         if (!user) continue;
 
         // Construct digest message

@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { SavingsService } from './savings.service';
 import { PredictiveEvaluatorService } from './services/predictive-evaluator.service';
+import { MilestoneService } from './services/milestone.service';
 import { SavingsProduct } from './entities/savings-product.entity';
 import { UserSubscription } from './entities/user-subscription.entity';
 import { SavingsGoal, SavingsGoalStatus } from './entities/savings-goal.entity';
@@ -111,11 +112,22 @@ describe('SavingsService', () => {
           },
         },
         {
+          provide: MilestoneService,
+          useValue: {
+            initializeAutomaticMilestones: jest
+              .fn()
+              .mockResolvedValue(undefined),
+            detectAndAchieveMilestones: jest.fn().mockResolvedValue([]),
+          },
+        },
+        {
           provide: WaitlistService,
           useValue: {
             addToWaitlist: jest.fn(),
             removeFromWaitlist: jest.fn(),
             getWaitlistPosition: jest.fn(),
+            joinWaitlist: jest.fn().mockResolvedValue({ position: 1 }),
+            recordConversion: jest.fn().mockResolvedValue(undefined),
           },
         },
         {

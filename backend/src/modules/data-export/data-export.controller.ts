@@ -50,11 +50,16 @@ export class DataExportController {
   }
 
   @Get('export/download/:token')
-  @ApiOperation({ summary: 'Download export ZIP by token (token acts as auth)' })
+  @ApiOperation({
+    summary: 'Download export ZIP by token (token acts as auth)',
+  })
   async download(@Param('token') token: string, @Res() res: Response) {
     const { filePath } = await this.dataExportService.getExportFile(token);
     res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', 'attachment; filename="nestera-data-export.zip"');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="nestera-data-export.zip"',
+    );
     res.sendFile(path.resolve(filePath));
   }
 }

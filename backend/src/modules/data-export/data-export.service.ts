@@ -48,14 +48,21 @@ export class DataExportService {
   /**
    * Create an export request and trigger async processing.
    */
-  async requestExport(userId: string): Promise<{ requestId: string; message: string }> {
+  async requestExport(
+    userId: string,
+  ): Promise<{ requestId: string; message: string }> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const request = this.exportRepository.create({ userId, status: ExportStatus.PENDING });
+    const request = this.exportRepository.create({
+      userId,
+      status: ExportStatus.PENDING,
+    });
     const saved = await this.exportRepository.save(request);
 
-    this.logger.log(`Data export requested for user ${userId}, request ${saved.id}`);
+    this.logger.log(
+      `Data export requested for user ${userId}, request ${saved.id}`,
+    );
 
     // Trigger async processing (fire-and-forget)
     this.processExport(saved.id, user).catch((err) =>
@@ -64,20 +71,25 @@ export class DataExportService {
 
     return {
       requestId: saved.id,
-      message: 'Export request received. You will receive an email when your data is ready.',
+      message:
+        'Export request received. You will receive an email when your data is ready.',
     };
   }
 
   /**
    * Download a ready export by token.
    */
-  async getExportFile(token: string): Promise<{ filePath: string; userId: string }> {
+  async getExportFile(
+    token: string,
+  ): Promise<{ filePath: string; userId: string }> {
     const request = await this.exportRepository.findOne({ where: { token } });
     if (!request || request.status !== ExportStatus.READY) {
       throw new NotFoundException('Export not found or not ready');
     }
     if (request.expiresAt && request.expiresAt < new Date()) {
-      await this.exportRepository.update(request.id, { status: ExportStatus.EXPIRED });
+      await this.exportRepository.update(request.id, {
+        status: ExportStatus.EXPIRED,
+      });
       throw new BadRequestException('Export link has expired');
     }
     if (!request.filePath || !fs.existsSync(request.filePath)) {
@@ -107,7 +119,9 @@ export class DataExportService {
    * Async: build ZIP, update record, email user.
    */
   private async processExport(requestId: string, user: User): Promise<void> {
-    await this.exportRepository.update(requestId, { status: ExportStatus.PROCESSING });
+    await this.exportRepository.update(requestId, {
+      status: ExportStatus.PROCESSING,
+    });
 
     try {
       const [transactions, notifications, goals] = await Promise.all([
@@ -118,7 +132,12 @@ export class DataExportService {
 
       const zipPath = path.join(EXPORT_DIR, `${requestId}.zip`);
       await this.buildZip(zipPath, {
-        'profile.json': { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt },
+        'profile.json': {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          createdAt: user.createdAt,
+        },
         'transactions.json': transactions,
         'goals.json': goals,
         'notifications.json': notifications,
@@ -145,7 +164,9 @@ export class DataExportService {
 
       this.logger.log(`Export ${requestId} completed for user ${user.id}`);
     } catch (err) {
-      await this.exportRepository.update(requestId, { status: ExportStatus.FAILED });
+      await this.exportRepository.update(requestId, {
+        status: ExportStatus.FAILED,
+      });
       throw err;
     }
   }

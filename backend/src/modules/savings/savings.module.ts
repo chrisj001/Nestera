@@ -4,10 +4,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { SavingsController } from './savings.controller';
 import { SavingsService } from './savings.service';
 import { PredictiveEvaluatorService } from './services/predictive-evaluator.service';
+import { MilestoneService } from './services/milestone.service';
 import { RecommendationService } from './services/recommendation.service';
 import { SavingsProduct } from './entities/savings-product.entity';
 import { UserSubscription } from './entities/user-subscription.entity';
 import { SavingsGoal } from './entities/savings-goal.entity';
+import { SavingsGoalMilestone } from './entities/savings-goal-milestone.entity';
 import { ProductApySnapshot } from './entities/product-apy-snapshot.entity';
 import { WithdrawalRequest } from './entities/withdrawal-request.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
@@ -34,6 +36,7 @@ import { AutoDepositService } from './services/auto-deposit.service';
       SavingsProduct,
       UserSubscription,
       SavingsGoal,
+      SavingsGoalMilestone,
       ProductApySnapshot,
       WithdrawalRequest,
       Transaction,
@@ -52,6 +55,7 @@ import { AutoDepositService } from './services/auto-deposit.service';
   providers: [
     SavingsService,
     PredictiveEvaluatorService,
+    MilestoneService,
     RecommendationService,
     WaitlistService,
     ExperimentsService,

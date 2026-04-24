@@ -40,6 +40,16 @@ export interface ClaimUpdatedEvent {
   timestamp: Date;
 }
 
+export interface MilestoneAchievedEvent {
+  userId: string;
+  goalId: string;
+  milestoneId: string;
+  percentage: number;
+  label: string;
+  bonusPoints: number;
+  achievedAt: Date;
+}
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
@@ -113,6 +123,41 @@ export class NotificationsService {
     } catch (error) {
       this.logger.error(
         `Error processing sweep.completed event for user ${event.userId}`,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Listen to milestone.achieved event and create in-app notification
+   */
+  @OnEvent('milestone.achieved')
+  async handleMilestoneAchieved(event: MilestoneAchievedEvent): Promise<void> {
+    this.logger.log(
+      `Processing milestone.achieved event for user ${event.userId}, goal ${event.goalId}`,
+    );
+
+    try {
+      const preferences = await this.getOrCreatePreferences(event.userId);
+
+      if (preferences.inAppNotifications) {
+        await this.createNotification({
+          userId: event.userId,
+          type: NotificationType.MILESTONE_ACHIEVED,
+          title: `Milestone Reached: ${event.percentage}%`,
+          message: `${event.label}${event.bonusPoints > 0 ? ` You earned ${event.bonusPoints} bonus points!` : ''}`,
+          metadata: {
+            goalId: event.goalId,
+            milestoneId: event.milestoneId,
+            percentage: event.percentage,
+            bonusPoints: event.bonusPoints,
+            achievedAt: event.achievedAt,
+          },
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error processing milestone.achieved event for user ${event.userId}`,
         error,
       );
     }
@@ -597,7 +642,9 @@ export class NotificationsService {
     proposer: string;
     title: string;
   }) {
-    this.logger.log(`Processing governance.proposal.created for ${event.onChainId}`);
+    this.logger.log(
+      `Processing governance.proposal.created for ${event.onChainId}`,
+    );
 
     try {
       // Find all users who have governance notifications enabled
@@ -704,7 +751,10 @@ export class NotificationsService {
         });
       }
     } catch (error) {
-      this.logger.error('Error processing governance.proposal.status_updated', error);
+      this.logger.error(
+        'Error processing governance.proposal.status_updated',
+        error,
+      );
     }
   }
 
@@ -719,7 +769,9 @@ export class NotificationsService {
     metadata?: Record<string, any>;
   }) {
     const preferences = await this.getOrCreatePreferences(data.userId);
-    const user = await this.userRepository.findOne({ where: { id: data.userId } });
+    const user = await this.userRepository.findOne({
+      where: { id: data.userId },
+    });
 
     if (!user) return;
 

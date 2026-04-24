@@ -161,7 +161,7 @@ describe('TransactionsController', () => {
       };
       mockTransactionsService.bulkTag.mockResolvedValue({ ok: true, count: 2 });
 
-      const res = await controller.bulkTag(mockUser, body as any);
+      const res = await controller.bulkTag(mockUser, body);
 
       expect(service.bulkTag).toHaveBeenCalledWith(mockUser.id, body);
       expect(res).toEqual({ ok: true, count: 2 });
