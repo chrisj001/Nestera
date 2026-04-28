@@ -18,7 +18,10 @@ import { WithdrawHandler } from './event-handlers/withdraw.handler';
 import { YieldHandler } from './event-handlers/yield.handler';
 import { StellarService } from './stellar.service';
 import { SavingsProduct } from '../savings/entities/savings-product.entity';
-import { LedgerTransaction, LedgerTransactionType } from './entities/transaction.entity';
+import {
+  LedgerTransaction,
+  LedgerTransactionType,
+} from './entities/transaction.entity';
 import {
   SubscriptionStatus,
   UserSubscription,
@@ -126,9 +129,8 @@ export class IndexerService implements OnModuleInit {
       );
 
       if (divergentLedger !== null) {
-        const affectedUsers = await this.rollbackTransactionsFromLedger(
-          divergentLedger,
-        );
+        const affectedUsers =
+          await this.rollbackTransactionsFromLedger(divergentLedger);
 
         this.indexerState.lastProcessedLedger = Math.max(
           0,
@@ -242,11 +244,13 @@ export class IndexerService implements OnModuleInit {
       currentLedger,
     );
 
-    const ledgers = Array.from(
-      new Set([...remoteSnapshots.keys(), ...localSnapshots.keys()]),
-    ).sort((left, right) => left - right);
+    // Only compare ledgers we have local data for (already processed)
+    // Fresh ledgers with no local data are not reorg indicators
+    const localLedgers = Array.from(localSnapshots.keys()).sort(
+      (left, right) => left - right,
+    );
 
-    for (const ledger of ledgers) {
+    for (const ledger of localLedgers) {
       const remote = this.normalizeSignatures(remoteSnapshots.get(ledger));
       const local = this.normalizeSignatures(localSnapshots.get(ledger));
 
@@ -394,7 +398,8 @@ export class IndexerService implements OnModuleInit {
 
         await txRepo.delete({ id: transaction.id });
 
-        const ledger = this.parseLedgerSequence(transaction.ledgerSequence) ?? 0;
+        const ledger =
+          this.parseLedgerSequence(transaction.ledgerSequence) ?? 0;
         const summary = summaries.get(transaction.userId) ?? {
           userId: transaction.userId,
           transactionCount: 0,
@@ -421,11 +426,11 @@ export class IndexerService implements OnModuleInit {
     transaction: LedgerTransaction,
   ): Promise<void> {
     const subRepo = manager.getRepository(UserSubscription);
-    const metadata = transaction.metadata as Record<string, unknown> | null;
+    const metadata = transaction.metadata;
     const subscriptionId = this.extractSubscriptionId(metadata);
     const amount = Number(transaction.amount);
 
-    let subscription = subscriptionId
+    const subscription = subscriptionId
       ? await subRepo.findOne({ where: { id: subscriptionId } })
       : await subRepo.findOne({
           where: {
@@ -530,10 +535,11 @@ export class IndexerService implements OnModuleInit {
   private isTrackedTransactionType(
     type: LedgerTransactionType | string,
   ): type is LedgerTransactionType {
+    const t = type as LedgerTransactionType;
     return (
-      type === LedgerTransactionType.DEPOSIT ||
-      type === LedgerTransactionType.WITHDRAW ||
-      type === LedgerTransactionType.YIELD
+      t === LedgerTransactionType.DEPOSIT ||
+      t === LedgerTransactionType.WITHDRAW ||
+      t === LedgerTransactionType.YIELD
     );
   }
 
