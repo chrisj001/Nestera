@@ -87,6 +87,7 @@ export class YieldHandler {
           metadata: {
             topic: event.topic,
             rawValueType: typeof event.value,
+            subscriptionId: subscription?.id ?? null,
           },
         }),
       );

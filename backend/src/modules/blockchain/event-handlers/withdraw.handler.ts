@@ -86,6 +86,7 @@ export class WithdrawHandler {
           metadata: {
             topic: event.topic,
             rawValueType: typeof event.value,
+            subscriptionId: subscription.id,
           },
         }),
       );

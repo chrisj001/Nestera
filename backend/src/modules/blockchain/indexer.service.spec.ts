@@ -2,10 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DataSource } from 'typeorm';
 import { IndexerService } from './indexer.service';
 import { IndexerState } from './entities/indexer-state.entity';
 import { DeadLetterEvent } from './entities/dead-letter-event.entity';
 import { SavingsProduct } from '../savings/entities/savings-product.entity';
+import { LedgerTransaction } from './entities/transaction.entity';
 import { StellarService } from './stellar.service';
 import { DepositHandler } from './event-handlers/deposit.handler';
 import { WithdrawHandler } from './event-handlers/withdraw.handler';
@@ -17,6 +20,9 @@ describe('IndexerService', () => {
   let indexerStateRepo: any;
   let savingsProductRepo: any;
   let deadLetterRepo: any;
+  let transactionRepo: any;
+  let eventEmitter: any;
+  let dataSource: any;
   let depositHandler: any;
   let withdrawHandler: any;
   let yieldHandler: any;
@@ -50,6 +56,27 @@ describe('IndexerService', () => {
       create: jest.fn().mockImplementation((val) => val),
     };
 
+    transactionRepo = {
+      find: jest.fn().mockResolvedValue([]),
+      delete: jest.fn(),
+    };
+
+    eventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue(undefined),
+    };
+
+    dataSource = {
+      transaction: jest.fn(async (callback: any) =>
+        callback({
+          getRepository: () => ({
+            findOne: jest.fn(),
+            save: jest.fn(),
+            delete: jest.fn(),
+          }),
+        }),
+      ),
+    };
+
     stellarService = {
       getRpcServer: jest.fn().mockReturnValue({
         getEvents: jest.fn(),
@@ -66,6 +93,8 @@ describe('IndexerService', () => {
         IndexerService,
         { provide: ConfigService, useValue: { get: jest.fn() } },
         { provide: StellarService, useValue: stellarService },
+        { provide: EventEmitter2, useValue: eventEmitter },
+        { provide: DataSource, useValue: dataSource },
         {
           provide: getRepositoryToken(IndexerState),
           useValue: indexerStateRepo,
@@ -77,6 +106,10 @@ describe('IndexerService', () => {
         {
           provide: getRepositoryToken(SavingsProduct),
           useValue: savingsProductRepo,
+        },
+        {
+          provide: getRepositoryToken(LedgerTransaction),
+          useValue: transactionRepo,
         },
         { provide: DepositHandler, useValue: depositHandler },
         { provide: WithdrawHandler, useValue: withdrawHandler },
@@ -127,7 +160,7 @@ describe('IndexerService', () => {
 
       await service.runIndexerCycle();
 
-      expect(stellarService.getEvents).toHaveBeenCalledWith(101, [
+      expect(stellarService.getEvents).toHaveBeenCalledWith(89, [
         'CC1',
         'CC2',
       ]);
