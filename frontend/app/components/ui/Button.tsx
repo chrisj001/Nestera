@@ -1,78 +1,53 @@
-import React from 'react';
-import { Loader2 } from 'lucide-react';
+"use client";
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-export type ButtonSize = 'sm' | 'md' | 'lg';
+import React from "react";
+import { clsx, type ClassValue } from "clsx";
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  loading?: boolean;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
-  fullWidth?: boolean;
-  children: React.ReactNode;
+function cn(...inputs: ClassValue[]) {
+  return clsx(inputs);
 }
 
-const variantClasses: Record<ButtonVariant, string> = {
-  primary:
-    'bg-cyan-500 hover:bg-cyan-400 text-[#061a1a] font-bold shadow-[0_8px_20px_rgba(0,201,200,0.2)] hover:shadow-[0_12px_28px_rgba(0,201,200,0.35)]',
-  secondary:
-    'bg-[var(--color-surface)] hover:bg-[var(--color-surface-strong)] text-[var(--color-text)] border border-[var(--color-border)] hover:border-[var(--color-border-strong)]',
-  outline:
-    'bg-transparent border border-cyan-400/40 text-cyan-300 hover:text-white hover:border-cyan-300',
-  ghost:
-    'bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-subtle)]',
-  danger:
-    'bg-[var(--color-danger)]/10 hover:bg-[var(--color-danger)]/20 text-[var(--color-danger)] border border-[var(--color-danger)]/20',
-};
-
-const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-xs rounded-lg min-h-8',
-  md: 'px-5 py-2.5 text-sm rounded-xl min-h-10',
-  lg: 'px-6 py-3.5 text-base rounded-2xl min-h-12',
-};
-
-export function Button({
-  variant = 'primary',
-  size = 'md',
-  loading = false,
-  disabled,
-  leftIcon,
-  rightIcon,
-  fullWidth = false,
-  className = '',
-  children,
-  ...props
-}: ButtonProps) {
-  const isDisabled = disabled || loading;
-
-  return (
-    <button
-      {...props}
-      disabled={isDisabled}
-      aria-disabled={isDisabled}
-      aria-busy={loading}
-      className={[
-        'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 active:scale-95 cursor-pointer',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]',
-        variantClasses[variant],
-        sizeClasses[size],
-        fullWidth ? 'w-full' : '',
-        isDisabled ? 'opacity-50 cursor-not-allowed active:scale-100' : '',
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      {loading ? (
-        <Loader2 size={size === 'sm' ? 12 : size === 'lg' ? 18 : 14} className="animate-spin" aria-hidden="true" />
-      ) : (
-        leftIcon && <span aria-hidden="true">{leftIcon}</span>
-      )}
-      {children}
-      {!loading && rightIcon && <span aria-hidden="true">{rightIcon}</span>}
-    </button>
-  );
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  size?: "sm" | "md" | "lg" | "icon";
+  isLoading?: boolean;
 }
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "primary", size = "md", isLoading, children, ...props }, ref) => {
+    const baseStyles = "inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+    
+    const variants = {
+      primary: "bg-linear-to-b from-[#0891b2] to-[#0e7490] text-white shadow-[0_4px_12px_rgba(8,145,178,0.25)] hover:shadow-[0_6px_20px_rgba(8,145,178,0.35)] hover:-translate-y-0.5",
+      secondary: "bg-surface-subtle text-foreground hover:bg-surface-subtle/80",
+      outline: "border border-border bg-transparent text-foreground hover:bg-surface-subtle",
+      ghost: "bg-transparent text-foreground hover:bg-surface-subtle",
+      danger: "bg-danger text-white shadow-[0_4px_12px_rgba(220,38,38,0.25)] hover:bg-danger/90",
+    };
+
+    const sizes = {
+      sm: "h-9 px-3 text-xs",
+      md: "h-11 px-6 text-sm",
+      lg: "h-13 px-8 text-base",
+      icon: "h-10 w-10 p-0",
+    };
+
+    return (
+      <button
+        ref={ref}
+        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        disabled={isLoading || props.disabled}
+        {...props}
+      >
+        {isLoading ? (
+          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : null}
+        {children}
+      </button>
+    );
+  }
+);
+
+Button.displayName = "Button";
+
+export { Button };

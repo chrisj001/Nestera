@@ -3,24 +3,47 @@
 import React from 'react';
 import { DocSection } from './DocsSidebar';
 import { Copy, ExternalLink, Terminal, ShieldCheck, Target, HelpCircle } from 'lucide-react';
+import { env } from '../config/env';
 
 interface SectionProps {
   section: DocSection;
 }
 
-const CodeBlock: React.FC<{ code: string; language?: string }> = ({ code, language }) => (
-  <div className="relative group my-6">
-    <div className="absolute -top-3 left-4 px-2 py-0.5 bg-[#0a2a2a] text-[0.6rem] text-cyan-500 font-mono border border-cyan-500/20 rounded uppercase tracking-widest">
-      {language || 'bash'}
+const CodeBlock: React.FC<{ code: string; language?: string }> = ({ code, language }) => {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div className="relative group my-6">
+      <div className="absolute -top-3 left-4 px-2 py-0.5 bg-[#0a2a2a] text-[0.6rem] text-cyan-500 font-mono border border-cyan-500/20 rounded uppercase tracking-widest">
+        {language || 'bash'}
+      </div>
+      <div className="p-6 pt-8 rounded-xl bg-[#030f0f] border border-white/5 font-mono text-sm overflow-x-auto text-[rgba(255,255,255,0.8)]">
+        <pre><code>{code}</code></pre>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={`Copy ${language || 'bash'} code block`}
+        className="absolute top-4 right-4 p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
+      >
+        <Copy size={16} />
+        <span className="sr-only">
+          {copied ? 'Copied to clipboard' : 'Copy code block to clipboard'}
+        </span>
+      </button>
     </div>
-    <div className="p-6 pt-8 rounded-xl bg-[#030f0f] border border-white/5 font-mono text-sm overflow-x-auto text-[rgba(255,255,255,0.8)]">
-      <pre><code>{code}</code></pre>
-    </div>
-    <button className="absolute top-4 right-4 p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100">
-      <Copy size={16} />
-    </button>
-  </div>
-);
+  );
+};
 
 const DocsSections: React.FC<SectionProps> = ({ section }) => {
   switch (section) {
@@ -90,7 +113,7 @@ const DocsSections: React.FC<SectionProps> = ({ section }) => {
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs flex items-center justify-center font-bold shrink-0 mt-0.5">4</span>
-                <span>Click the "Connect Wallet" button in the Nestera navigation bar.</span>
+                <span>Click the &quot;Connect Wallet&quot; button in the Nestera navigation bar.</span>
               </li>
             </ul>
           </div>
@@ -138,7 +161,7 @@ const DocsSections: React.FC<SectionProps> = ({ section }) => {
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <h1 className="text-4xl font-extrabold text-white mb-6 tracking-tight">API Documentation</h1>
           <p className="text-lg text-[rgba(180,210,210,0.7)] leading-relaxed mb-8">
-            Developers can integrate Nestera's saving features into their own applications using our REST API or by interacting directly with our smart contracts.
+            Developers can integrate Nestera&apos;s saving features into their own applications using our REST API or by interacting directly with our smart contracts.
           </p>
 
           <h2 className="text-2xl font-bold text-white mb-4">Getting Pool Data</h2>
@@ -146,17 +169,17 @@ const DocsSections: React.FC<SectionProps> = ({ section }) => {
           <CodeBlock 
             language="javascript"
             code={`// Fetch pool details
-const response = await fetch('https://api.nestera.io/v1/pools/usdc-main');
+const response = await fetch('https://api.yourdomain.com/v1/pools/usdc-main');
 const data = await response.json();
 
 console.log(\`Current APY: \${data.apy}%\`);`}
           />
 
           <h2 className="text-2xl font-bold text-white mb-4 mt-12">User Balance API</h2>
-          <p className="text-[rgba(180,210,210,0.7)] mb-4">Retrieve a user's total savings across all goals.</p>
+          <p className="text-[rgba(180,210,210,0.7)] mb-4">Retrieve a user&apos;s total savings across all goals.</p>
           <CodeBlock 
             language="bash"
-            code={`curl -X GET "https://api.nestera.io/v1/user/GABC...1234/balance" \\
+            code={`curl -X GET "https://api.yourdomain.com/v1/user/GABC...1234/balance" \\
      -H "Authorization: Bearer YOUR_API_KEY"`}
           />
         </div>

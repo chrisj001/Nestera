@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import {
   ApiOperation,
   ApiParam,
@@ -9,6 +9,9 @@ import {
 import { StellarService } from './stellar.service';
 import { BalanceSyncService } from './balance-sync.service';
 import { TransactionDto } from './dto/transaction.dto';
+import { TransactionBatchingService } from './transaction-batching.service';
+import { CreateTransactionBatchDto } from './dto/create-transaction-batch.dto';
+import { TransactionBatchResponseDto } from './dto/transaction-batch-response.dto';
 
 @ApiTags('Blockchain')
 @Controller('blockchain')
@@ -16,16 +19,46 @@ export class BlockchainController {
   constructor(
     private readonly stellarService: StellarService,
     private readonly balanceSyncService: BalanceSyncService,
+    private readonly transactionBatchingService: TransactionBatchingService,
   ) {}
 
   @Post('wallets/generate')
-  @ApiOperation({ summary: 'Generate a new Stellar keypair' })
+  @ApiOperation({
+    summary: 'Generate a new Stellar keypair',
+    description: 'Generates a new Stellar public/private keypair. **IMPORTANT**: The secret key is returned only once and must be stored securely.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Keypair generated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        publicKey: {
+          type: 'string',
+          example: 'GABCDEF234567ABCDEFGHIJKLMNOPQRSTUVWXYZ234567ABCDEFGHJKLMN',
+          description: 'Stellar public key (G... format)',
+        },
+        secretKey: {
+          type: 'string',
+          example: 'SABC1234...',
+          description: 'Stellar secret key - store securely! Only shown once.',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Too many requests - rate limit exceeded',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   generateWallet() {
     return this.stellarService.generateKeypair();
   }
 
   @Get('wallets/:publicKey/transactions')
   @ApiOperation({
+    summary: 'Get recent on-chain transactions for a Stellar wallet',
+    description: 'Retrieve recent transaction history for a Stellar public key from the Horizon API.',
     summary: 'Get paginated recent on-chain transactions for a Stellar wallet',
   })
   @ApiParam({
@@ -60,6 +93,23 @@ export class BlockchainController {
       },
     },
   })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid public key format',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Wallet not found or no transactions',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Too many requests - rate limit exceeded',
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Horizon API unavailable',
+  })
+  getWalletTransactions(
   async getWalletTransactions(
     @Param('publicKey') publicKey: string,
     @Query('limit') limit?: number,
@@ -94,9 +144,61 @@ export class BlockchainController {
     status: 200,
     description:
       'Status of all RPC endpoints including current active endpoint',
+    schema: {
+      type: 'object',
+      example: {
+        primary: 'https://soroban-testnet.stellar.org',
+        fallbacks: ['https://rpc1.stellar.org', 'https://rpc2.stellar.org'],
+        horizonPrimary: 'https://horizon-testnet.stellar.org',
+        horizonFallbacks: ['https://horizon1.stellar.org'],
+        currentRpcEndpoint: 'https://soroban-testnet.stellar.org',
+      },
+    },
   })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   getRpcStatus() {
     return this.stellarService.getEndpointsStatus();
+  }
+
+  @Post('batches')
+  @ApiOperation({
+    summary: 'Create and process a Soroban transaction batch',
+    description:
+      'Executes compatible contract operations using one source signer, tracks partial failures, and returns fee savings metrics. The sourceSecretKey is never persisted or returned.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Persisted batch status including per-operation results',
+    type: TransactionBatchResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid batch request' })
+  async createBatch(
+    @Body() dto: CreateTransactionBatchDto,
+  ): Promise<TransactionBatchResponseDto> {
+    return this.transactionBatchingService.createAndProcessBatch(
+      dto.sourceSecretKey,
+      dto.operations,
+      { maxBatchSize: dto.maxBatchSize, metadata: dto.metadata },
+    );
+  }
+
+  @Get('batches/:id')
+  @ApiOperation({
+    summary:
+      'Get transaction batch status, operation results, and cost metrics',
+  })
+  @ApiParam({ name: 'id', description: 'Transaction batch UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Batch status including operations and cost-savings metrics',
+    type: TransactionBatchResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Transaction batch not found' })
+  async getBatch(
+    @Param('id') id: string,
+  ): Promise<TransactionBatchResponseDto> {
+    return this.transactionBatchingService.getBatchStatus(id);
   }
 
   @Get('balance-sync/metrics')
