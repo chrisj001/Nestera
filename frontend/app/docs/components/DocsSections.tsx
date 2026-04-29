@@ -9,19 +9,41 @@ interface SectionProps {
   section: DocSection;
 }
 
-const CodeBlock: React.FC<{ code: string; language?: string }> = ({ code, language }) => (
-  <div className="relative group my-6">
-    <div className="absolute -top-3 left-4 px-2 py-0.5 bg-[#0a2a2a] text-[0.6rem] text-cyan-500 font-mono border border-cyan-500/20 rounded uppercase tracking-widest">
-      {language || 'bash'}
+const CodeBlock: React.FC<{ code: string; language?: string }> = ({ code, language }) => {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div className="relative group my-6">
+      <div className="absolute -top-3 left-4 px-2 py-0.5 bg-[#0a2a2a] text-[0.6rem] text-cyan-500 font-mono border border-cyan-500/20 rounded uppercase tracking-widest">
+        {language || 'bash'}
+      </div>
+      <div className="p-6 pt-8 rounded-xl bg-[#030f0f] border border-white/5 font-mono text-sm overflow-x-auto text-[rgba(255,255,255,0.8)]">
+        <pre><code>{code}</code></pre>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={`Copy ${language || 'bash'} code block`}
+        className="absolute top-4 right-4 p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
+      >
+        <Copy size={16} />
+        <span className="sr-only">
+          {copied ? 'Copied to clipboard' : 'Copy code block to clipboard'}
+        </span>
+      </button>
     </div>
-    <div className="p-6 pt-8 rounded-xl bg-[#030f0f] border border-white/5 font-mono text-sm overflow-x-auto text-[rgba(255,255,255,0.8)]">
-      <pre><code>{code}</code></pre>
-    </div>
-    <button className="absolute top-4 right-4 p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100">
-      <Copy size={16} />
-    </button>
-  </div>
-);
+  );
+};
 
 const DocsSections: React.FC<SectionProps> = ({ section }) => {
   switch (section) {

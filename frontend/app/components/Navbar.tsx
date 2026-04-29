@@ -144,6 +144,7 @@ const Navbar: React.FC = () => {
               <Link
                 key={link.href}
                 href={link.href}
+                aria-current={isActiveLink(link.href) ? 'page' : undefined}
                 className={isActiveLink(link.href) ? `${navLinkBase} ${navLinkActive}` : navLinkBase}
               >
                 {link.label}
