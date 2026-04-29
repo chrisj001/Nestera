@@ -8,7 +8,9 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { WalletProvider } from "./context/WalletContext";
 import { ToastProvider } from "./context/ToastContext";
 
-const BASE_URL = "https://nestera.app";
+import { env } from "./config/env";
+
+const BASE_URL = env.baseUrl;
 
 const supportedLocales = ["en", "es"] as const;
 

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { formatDate } from "../lib/intl";
+import { env } from "../config/env";
 
 const pageCopy = {
   en: {
@@ -191,7 +192,7 @@ export default function TermsPage() {
             </h2>
             <p className="text-gray-300 mb-4">
               If you have any questions about these Terms of Service, please
-              contact us at legal@nestera.com.
+              contact us at {env.legalEmail}.
             </p>
           </section>
         </div>

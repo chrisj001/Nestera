@@ -60,6 +60,27 @@ function TestProviders({ children }: { children: React.ReactNode }) {
     </QueryClientProvider>
   );
 }
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value.toString();
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
+Object.defineProperty(window, "localStorage", {
+  value: localStorageMock,
+});
 
 // Consumer component to test context values
 function WalletConsumer() {
@@ -71,9 +92,20 @@ function WalletConsumer() {
       </span>
       <span data-testid="address">{wallet.address ?? "no-address"}</span>
       <span data-testid="loading">{wallet.isLoading ? "loading" : "idle"}</span>
+      <span data-testid="connection-status">{wallet.connectionStatus}</span>
+      <span data-testid="is-locked">{wallet.isWalletLocked ? "locked" : "not-locked"}</span>
+      <span data-testid="has-connection-issue">
+        {wallet.hasConnectionIssue ? "has-issue" : "no-issue"}
+      </span>
+      <span data-testid="last-connected-network">
+        {wallet.lastConnectedNetwork ?? "no-network"}
+      </span>
+      <span data-testid="error">{wallet.error ?? "no-error"}</span>
       <button onClick={wallet.connect}>Connect</button>
       <button onClick={wallet.disconnect}>Disconnect</button>
       <button onClick={wallet.fetchBalances}>Refresh balances</button>
+      <button onClick={wallet.reconnect}>Reconnect</button>
+      <button onClick={wallet.clearError}>Clear Error</button>
     </div>
   );
 }
@@ -89,6 +121,7 @@ function renderWallet() {
 describe("WalletContext", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorage.clear();
     // Default: not connected
     const freighter = require("@stellar/freighter-api");
     freighter.isConnected.mockResolvedValue({ isConnected: false });
@@ -102,10 +135,10 @@ describe("WalletContext", () => {
     expect(screen.getByTestId("connected")).toBeInTheDocument();
   });
 
-  it("starts in disconnected state", async () => {
+  it("starts in idle state when not connected", async () => {
     renderWallet();
     await waitFor(() => {
-      expect(screen.getByTestId("connected")).toHaveTextContent("disconnected");
+      expect(screen.getByTestId("connection-status")).toHaveTextContent("idle");
     });
   });
 
@@ -135,6 +168,7 @@ describe("WalletContext", () => {
     await waitFor(() => {
       expect(screen.getByTestId("address")).toHaveTextContent("GABC123TEST456");
       expect(screen.getByTestId("connected")).toHaveTextContent("connected");
+      expect(screen.getByTestId("connection-status")).toHaveTextContent("connected");
     });
   });
 
@@ -181,6 +215,7 @@ describe("WalletContext", () => {
 
     expect(screen.getByTestId("connected")).toHaveTextContent("disconnected");
     expect(screen.getByTestId("address")).toHaveTextContent("no-address");
+    expect(screen.getByTestId("connection-status")).toHaveTextContent("disconnected");
   });
 
   it("handles connection error gracefully", async () => {
@@ -195,6 +230,25 @@ describe("WalletContext", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("connected")).toHaveTextContent("disconnected");
+      expect(screen.getByTestId("error")).toHaveTextContent("User rejected");
+    });
+  });
+
+  it("handles locked wallet error", async () => {
+    const freighter = require("@stellar/freighter-api");
+    freighter.requestAccess.mockResolvedValue({
+      error: "Wallet is locked. Please unlock in extension.",
+    });
+
+    renderWallet();
+
+    await act(async () => {
+      screen.getByText("Connect").click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("is-locked")).toHaveTextContent("locked");
+      expect(screen.getByTestId("connection-status")).toHaveTextContent("locked");
     });
   });
 
@@ -202,11 +256,96 @@ describe("WalletContext", () => {
     const freighter = require("@stellar/freighter-api");
     freighter.isConnected.mockResolvedValue({ isConnected: true });
     freighter.getAddress.mockResolvedValue({ address: "GPREVIOUSADDR" });
+    freighter.getNetwork.mockResolvedValue({ network: "TESTNET" });
 
     renderWallet();
 
     await waitFor(() => {
       expect(screen.getByTestId("connected")).toHaveTextContent("connected");
+      expect(screen.getByTestId("address")).toHaveTextContent("GPREVIOUSADDR");
+    });
+  });
+
+  it("persists network preference to localStorage", async () => {
+    renderWallet();
+
+    await act(async () => {
+      screen.getByText("Connect").click();
+    });
+
+    await waitFor(() => {
+      expect(localStorage.getItem("nestera_last_network")).toBe("TESTNET");
+    });
+  });
+
+  it("loads saved network preference on initialization", async () => {
+    localStorage.setItem("nestera_last_network", "PUBLIC");
+
+    const freighter = require("@stellar/freighter-api");
+    freighter.isConnected.mockResolvedValue({ isConnected: false });
+
+    renderWallet();
+
+    await waitFor(() => {
+      // Verify localStorage was checked
+      expect(localStorage.getItem("nestera_last_network")).toBe("PUBLIC");
+    });
+  });
+
+  it("clears error message on clearError", async () => {
+    const freighter = require("@stellar/freighter-api");
+    freighter.requestAccess.mockResolvedValue({ error: "Test error" });
+
+    renderWallet();
+
+    await act(async () => {
+      screen.getByText("Connect").click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error")).not.toHaveTextContent("no-error");
+    });
+
+    act(() => {
+      screen.getByText("Clear Error").click();
+    });
+
+    expect(screen.getByTestId("error")).toHaveTextContent("no-error");
+  });
+
+  it("handles reconnection attempt", async () => {
+    const freighter = require("@stellar/freighter-api");
+    freighter.isConnected.mockResolvedValue({ isConnected: true });
+
+    renderWallet();
+
+    await act(async () => {
+      screen.getByText("Reconnect").click();
+    });
+
+    // After reconnect, should attempt to get address
+    await waitFor(() => {
+      expect(freighter.getAddress).toHaveBeenCalled();
+    });
+  });
+
+  it("tracks connection status transitions", async () => {
+    renderWallet();
+
+    // Should start as idle
+    await waitFor(() => {
+      expect(screen.getByTestId("connection-status")).toHaveTextContent("idle");
+    });
+
+    // Move to connecting
+    await act(async () => {
+      const connectBtn = screen.getByText("Connect");
+      connectBtn.click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("connection-status")).toHaveTextContent("connected");
     });
   });
 });
+

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { formatDate } from "../lib/intl";
+import { env } from "../config/env";
 
 const pageCopy = {
   en: {
@@ -210,7 +211,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="text-gray-300 mb-4">
               To exercise these rights, please contact us at
-              privacy@nestera.com.
+              {env.legalEmail}.
             </p>
           </section>
 
@@ -259,7 +260,7 @@ export default function PrivacyPage() {
               practices, please contact us at:
             </p>
             <p className="text-gray-300 mb-4">
-              Email: privacy@nestera.com
+              Email: {env.legalEmail}
               <br />
               Address: [Company Address]
             </p>
