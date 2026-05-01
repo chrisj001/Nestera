@@ -1,6 +1,25 @@
+import { Metadata } from "next";
+import SupportPage from "./SupportClient";
+
+export const metadata: Metadata = {
+  title: "Help & Support",
+  description: "Get help with Nestera. Browse FAQs, watch video tutorials, or contact our support team directly.",
+  alternates: {
+    canonical: "/support",
+  },
+  openGraph: {
+    title: "Help & Support - Nestera",
+    description: "Get help with Nestera. Browse FAQs, watch video tutorials, or contact our support team directly.",
+    images: ["/api/og?page=support"],
+  },
+};
+
+export default function Page() {
+  return <SupportPage />;
 "use client";
 
 import React, { useState } from "react";
+import { trackEvent, AnalyticsEvents } from "../../lib/analytics";
 import {
   LifeBuoy,
   Search,
@@ -147,6 +166,9 @@ export default function SupportPage() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     console.log("Support request sent:", data);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    trackEvent(AnalyticsEvents.FORM_SUBMIT_SUCCESS, { form: "support" });
     setSent(true);
   };
 

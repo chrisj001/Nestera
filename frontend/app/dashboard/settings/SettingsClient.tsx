@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Monitor, Moon, Settings, Sun } from "lucide-react";
 import { type Theme, useTheme } from "../../context/ThemeContext";
+import DataExportSection from "../../components/dashboard/DataExportSection";
 import { SettingsSkeleton } from "../../components/ui/PageSkeletons";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -251,6 +252,47 @@ export default function SettingsClient() {
             </form>
           </section>
         </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-[var(--color-border)] bg-linear-to-b from-[var(--color-card-start)] to-[var(--color-card-end)] p-6 md:p-8">
+          <h2 className="mb-4 text-lg font-semibold text-[var(--color-text)]">Notifications</h2>
+          <div className="mx-auto flex max-w-xl flex-col gap-4 text-left">
+            <PreferenceToggle
+              label="Email Notifications"
+              description="Receive emails about important account events"
+              checked={!!prefs?.emailNotifications}
+              onChange={() => toggle("emailNotifications")}
+            />
+            <PreferenceToggle
+              label="In-app Notifications"
+              description="Show notifications inside the app"
+              checked={!!prefs?.inAppNotifications}
+              onChange={() => toggle("inAppNotifications")}
+            />
+            <PreferenceToggle
+              label="Goal Milestone Notifications"
+              description="Receive celebratory messages when goals reach 25%, 50%, 75%, and 100%."
+              checked={!!prefs?.milestoneNotifications}
+              onChange={() => toggle("milestoneNotifications")}
+            />
+
+            <div className="text-right">
+              <button
+                className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[#061a1a] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+                onClick={save}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save Preferences"}
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <DataExportSection />
       )}
     </div>
   );

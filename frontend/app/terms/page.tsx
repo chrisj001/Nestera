@@ -5,6 +5,18 @@ import Footer from "../components/Footer";
 import { formatDate } from "../lib/intl";
 import { env } from "../config/env";
 
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "Read the Terms of Service for Nestera's decentralized savings platform built on the Stellar blockchain.",
+  alternates: {
+    canonical: "/terms",
+  },
+  openGraph: {
+    title: "Terms of Service - Nestera",
+    description: "Read the Terms of Service for Nestera's decentralized savings platform built on the Stellar blockchain.",
+    images: ["/api/og?page=home"],
+  },
+};
 const pageCopy = {
   en: {
     title: "Terms of Service",

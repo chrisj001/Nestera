@@ -5,6 +5,18 @@ import Footer from "../components/Footer";
 import { formatDate } from "../lib/intl";
 import { env } from "../config/env";
 
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Learn how Nestera collects, uses, and protects your data on our decentralized savings platform.",
+  alternates: {
+    canonical: "/privacy",
+  },
+  openGraph: {
+    title: "Privacy Policy - Nestera",
+    description: "Learn how Nestera collects, uses, and protects your data on our decentralized savings platform.",
+    images: ["/api/og?page=home"],
+  },
+};
 const pageCopy = {
   en: {
     title: "Privacy Policy",

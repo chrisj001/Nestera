@@ -1,3 +1,21 @@
+import { Metadata } from "next";
+import GoalBasedSavingsPage from "./SavingsClient";
+
+export const metadata: Metadata = {
+  title: "Goal-Based Savings",
+  description: "Create savings targets, track progress, and stay on course toward your personal financial goals with Nestera's decentralized platform.",
+  alternates: {
+    canonical: "/savings",
+  },
+  openGraph: {
+    title: "Goal-Based Savings - Nestera",
+    description: "Create savings targets, track progress, and stay on course toward your personal financial goals with Nestera's decentralized platform.",
+    images: ["/api/og?page=savings"],
+  },
+};
+
+export default function Page() {
+  return <GoalBasedSavingsPage />;
 'use client';
 
 import React from "react";
@@ -5,7 +23,6 @@ import Link from "next/link";
 import {
   LayoutGrid,
   List,
-  Search,
   ChevronDown,
   CheckCircle2,
   Trophy,
@@ -15,8 +32,15 @@ import {
   Home,
   Airplay,
   ShoppingBag,
+  Download,
 } from "lucide-react";
 import GoalCard, { GoalStatus } from "./components/GoalCard";
+import { useSearchFilter } from "../hooks/useSearchFilter";
+import SearchFilterSystem from "../components/ui/SearchFilterSystem";
+import { toCsv, downloadTextFile } from "../utils/csvExport";
+import { Download } from "lucide-react";
+import { useToast } from "../context/ToastContext";
+import ExportModal from "../components/dashboard/ExportModal";
 import { SavingsPoolsSkeleton } from "../components/ui/PageSkeletons";
 
 // export const metadata = { title: "Goal-Based Savings - Nestera" };
@@ -27,6 +51,7 @@ export default function GoalBasedSavingsPage() {
   const [statusFilter, setStatusFilter] = React.useState("All");
   const [sortBy, setSortBy] = React.useState("Progress");
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+  const [exportOpen, setExportOpen] = React.useState(false);
 
   React.useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 1500);
@@ -92,28 +117,55 @@ export default function GoalBasedSavingsPage() {
     },
   ];
   const featuredGoal = goals[1];
-  const filteredGoals = React.useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    let filtered = goals.filter((goal) => {
-      const matchesSearch =
-        !query ||
-        goal.title.toLowerCase().includes(query) ||
-        goal.contributionFrequency.toLowerCase().includes(query);
-      const matchesStatus = statusFilter === "All" || goal.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
 
-    filtered = filtered.sort((a, b) =>
-      sortBy === "Target"
-        ? parseInt(b.targetAmount.replace(/[$,]/g, ""), 10) -
-          parseInt(a.targetAmount.replace(/[$,]/g, ""), 10)
-        : b.progressPercent - a.progressPercent,
+  const {
+    query,
+    setQuery,
+    ranges,
+    setRanges,
+    history,
+    addToHistory,
+    presets,
+    savePreset,
+    applyPreset,
+    clearFilters,
+    filteredItems: filteredGoals,
+  } = useSearchFilter(goals, {
+    includeFields: ["title", "contributionFrequency", "status"],
+  });
+
+  const toast = useToast();
+
+  function onExportCsv() {
+    const csv = toCsv(filteredGoals, ["title", "status", "targetAmount", "currentSaved", "progressPercent", "contributionFrequency"]);
+    downloadTextFile(
+      `nestera-savings-goals-${new Date().toISOString().slice(0, 10)}.csv`,
+      csv,
     );
-    return filtered;
-  }, [goals, searchQuery, sortBy, statusFilter]);
+    toast.success("Goals exported", "CSV file downloaded successfully.");
+  }
+
+  const exportRows = goals.map((g) => ({
+    title: g.title,
+    status: g.status,
+    target_amount: g.targetAmount,
+    current_saved: g.currentSaved,
+    remaining: g.remainingAmount,
+    progress_pct: g.progressPercent,
+    deadline: g.scheduleLabel,
+    contribution_frequency: g.contributionFrequency,
+    next_contribution: g.nextContributionValue,
+  }));
 
   return (
     <section className="min-h-screen w-full bg-[#0b1f20]">
+      <ExportModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+        dataType="goals"
+        title="Savings Goals"
+        rows={exportRows}
+      />
       {/* Header Band */}
       <div className="w-full bg-[#0f2a2a]">
         <div className="w-full max-w-7xl mx-auto px-6 md:px-8 pt-10 pb-12">
@@ -128,9 +180,24 @@ export default function GoalBasedSavingsPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="px-5 py-2.5 rounded-xl border border-cyan-400/40 text-cyan-200 hover:text-white hover:border-cyan-300 transition-colors">
-                View Templates
+              <Button variant="outline" size="md">
+              <button
+                onClick={() => setExportOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-cyan-400/40 text-cyan-200 hover:text-white hover:border-cyan-300 transition-colors"
+              >
+                <Download size={16} />
+                Export
               </button>
+              <button
+                onClick={onExportCsv}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-[#6a8a93] hover:text-white transition-all"
+              >
+                <Download size={18} />
+                Export
+              </button>
+              <button className="px-5 py-2.5 rounded-xl border border-cyan-400/20 text-cyan-400/70 hover:text-white hover:border-cyan-300 transition-colors">
+                View Templates
+              </Button>
               <Link
                 href="/savings/create-goal"
                 className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-[#061a1a] font-semibold rounded-xl transition-all shadow-lg active:scale-95 inline-block"
@@ -146,6 +213,22 @@ export default function GoalBasedSavingsPage() {
         <div className="w-full max-w-7xl mx-auto px-6 md:px-8 py-10">
           <SavingsPoolsSkeleton />
         </div>
+
+        <SearchFilterSystem
+          query={query}
+          setQuery={setQuery}
+          ranges={ranges}
+          setRanges={setRanges}
+          history={history}
+          addToHistory={addToHistory}
+          presets={presets}
+          savePreset={savePreset}
+          applyPreset={applyPreset}
+          clearFilters={clearFilters}
+          placeholder="Search goals (e.g. active AND Fund)..."
+        />
+
+        <h2 className="text-xl md:text-2xl text-white font-bold mb-5">Your Savings Goals</h2>
       ) : (
         <>
           {/* Summary Stats */}

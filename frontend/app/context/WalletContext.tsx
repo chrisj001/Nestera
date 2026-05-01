@@ -20,7 +20,10 @@ import {
   requestAccess,
   WatchWalletChanges,
 } from "@stellar/freighter-api";
+import { useQueryClient } from "@tanstack/react-query";
+import { useWalletBalances, Balance } from "../hooks/useWalletBalances";
 import { Horizon } from "@stellar/stellar-sdk";
+import { trackEvent, AnalyticsEvents } from "../../lib/analytics";
 import {
   COINGECKO_PRICE_GC_TIME,
   COINGECKO_PRICE_STALE_TIME,
@@ -56,7 +59,6 @@ interface WalletState {
   isConnected: boolean;
   connectionStatus: ConnectionStatus;
   isLoading: boolean;
-  isBalancesLoading: boolean;
   error: string | null;
   balanceError: string | null;
   balances: Balance[];
@@ -68,6 +70,13 @@ interface WalletState {
 }
 
 interface WalletContextValue extends WalletState {
+  // Derived from React Query
+  balances: Balance[];
+  totalUsdValue: number;
+  isBalancesLoading: boolean;
+  balanceError: string | null;
+  lastBalanceSync: number | null;
+  // Actions
   connect: () => Promise<void>;
   disconnect: () => void;
   fetchBalances: () => Promise<void>;
@@ -154,8 +163,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     isConnected: false,
     connectionStatus: "idle",
     isLoading: false,
-    isBalancesLoading: false,
     error: null,
+  });
+
+  const queryClient = useQueryClient();
     balanceError: null,
     balances: [],
     totalUsdValue: 0,
@@ -172,6 +183,25 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const refreshInterval = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
 
+  // React Query handles fetching, caching, and background refetch
+  const {
+    data,
+    isFetching: isBalancesLoading,
+    error: balancesQueryError,
+    refetch,
+  } = useWalletBalances(state.address, state.network);
+
+  const balances = data?.balances ?? [];
+  const totalUsdValue = data?.totalUsdValue ?? 0;
+  const lastBalanceSync = data?.lastSync ?? null;
+  const balanceError = balancesQueryError
+    ? (balancesQueryError as Error).message
+    : null;
+
+  // Expose a manual refetch for backwards compatibility
+  const fetchBalances = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
   // Utility: Get Horizon URL based on network
   const getHorizonUrl = (network: string | null) => {
     return network?.toLowerCase() === "public"
@@ -356,6 +386,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  // Watch for network/address changes when wallet is connected
   useEffect(() => {
     if (state.isConnected || state.address) {
       return;
@@ -406,22 +437,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   // Watch for network changes and disconnections when wallet is connected
   useEffect(() => {
     if (!state.isConnected) {
-      // Clean up watcher when wallet is disconnected
       if (networkWatcher.current) {
-        try {
-          networkWatcher.current.stop();
-        } catch (error) {
-          console.error("Error stopping network watcher:", error);
-        }
+        try { networkWatcher.current.stop(); } catch {}
         networkWatcher.current = null;
       }
       return;
     }
 
     try {
-      // Initialize watcher to poll every 3 seconds
       networkWatcher.current = new WatchWalletChanges(3000);
-
       networkWatcher.current.watch((changes: WalletChangeEvent) => {
         // Detect disconnection
         if (changes.error) {
@@ -438,6 +462,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
         // Detect network changes
         if (changes.network && changes.network !== state.network) {
+          setState((s) => ({ ...s, network: changes.network }));
           saveNetworkPreference(changes.network);
           setState((prevState) => ({
             ...prevState,
@@ -463,14 +488,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       }));
     }
 
-    // Cleanup function
     return () => {
       if (networkWatcher.current) {
-        try {
-          networkWatcher.current.stop();
-        } catch (error) {
-          console.error("Error stopping network watcher:", error);
-        }
+        try { networkWatcher.current.stop(); } catch {}
         networkWatcher.current = null;
       }
     };
@@ -485,6 +505,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      trackEvent(AnalyticsEvents.WALLET_CONNECT_ATTEMPT);
+      const accessResult = await requestAccess();
+      if (accessResult?.error) {
+        trackEvent(AnalyticsEvents.WALLET_CONNECT_FAILURE, { error: accessResult.error });
       // Set connection timeout
       const timeoutPromise = new Promise<never>((_, reject) => {
         connectionTimeoutRef.current = setTimeout(() => {
@@ -620,7 +644,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         isWalletLocked: false,
         hasConnectionIssue: false,
       }));
+      trackEvent(AnalyticsEvents.WALLET_CONNECT_SUCCESS, { address: addrResult?.address });
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet";
+      trackEvent(AnalyticsEvents.WALLET_CONNECT_FAILURE, { error: errorMessage });
+      setState((s) => ({
+        ...s,
+        isLoading: false,
+        error: errorMessage,
       console.error("Reconnection failed:", err);
       setState((s) => ({
         ...s,
@@ -632,6 +663,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [connect, state.lastConnectedNetwork]);
 
   const disconnect = useCallback(() => {
+    // Remove cached balance data for this address on disconnect
+    if (state.address) {
+      queryClient.removeQueries({ queryKey: ["balances", state.address] });
+    }
+    setState({
     queryClient.removeQueries({ queryKey: ["wallet-balances"] });
     // Clear all intervals and timeouts
     if (refreshInterval.current) clearInterval(refreshInterval.current);
@@ -653,6 +689,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       connectionStatus: "disconnected",
       isLoading: false,
       error: null,
+    });
+  }, [state.address, queryClient]);
       balanceError: null,
       balances: [],
       totalUsdValue: 0,
@@ -661,6 +699,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       isWalletLocked: false,
       hasConnectionIssue: false,
     }));
+    trackEvent(AnalyticsEvents.WALLET_DISCONNECT);
   }, []);
 
   const clearError = useCallback(() => {
@@ -687,9 +726,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         ...state,
         balances,
         totalUsdValue,
+        balanceError,
         lastBalanceSync,
         isBalancesLoading,
-        balanceError,
         connect,
         reconnect,
         disconnect,
