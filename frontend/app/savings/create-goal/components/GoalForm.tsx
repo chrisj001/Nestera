@@ -13,15 +13,16 @@ const GoalSchema = z.object({
     .max(50, "Goal name must be less than 50 characters"),
   category: z.string().min(1, "Please select a category"),
   targetAmount: z.coerce
-    .number({
-      invalid_type_error: "Target amount must be a number",
+    .number()
+    .refine((value) => !Number.isNaN(value), {
+      message: "Target amount must be a number",
     })
     .positive("Target amount must be greater than 0"),
-  targetDate: z.string().refine((val) => {
+  targetDate: z.string().min(1, "Please select a target date").refine((val) => {
     const date = new Date(`${val}T00:00:00`);
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return date >= today;
+    return !Number.isNaN(date.getTime()) && date >= today;
   }, "Target date cannot be in the past"),
 });
 
@@ -36,6 +37,8 @@ export default function GoalForm() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<GoalValues>({
+    mode: "onTouched",
+    reValidateMode: "onChange",
     resolver: zodResolver(GoalSchema),
     defaultValues: {
       goalName: "",
@@ -215,7 +218,7 @@ export default function GoalForm() {
                   />
                 </div>
                 {errors.targetDate && (
-                  <p id="targetDate-error" className="text-amber-400 text-xs mt-2 m-0">
+                  <p id="targetDate-error" role="alert" aria-live="assertive" className="text-amber-400 text-xs mt-2 m-0">
                     {errors.targetDate.message}
                   </p>
                 )}

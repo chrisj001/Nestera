@@ -58,6 +58,8 @@ export default function SettingsClient() {
     reset,
     formState: { isSubmitting, isDirty },
   } = useForm<Prefs>({
+    mode: "onTouched",
+    reValidateMode: "onChange",
     resolver: zodResolver(PrefsSchema),
     defaultValues: {
       emailNotifications: false,

@@ -23,6 +23,8 @@ const Newsletter: React.FC = () => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<NewsletterValues>({
+    mode: "onTouched",
+    reValidateMode: "onChange",
     resolver: zodResolver(NewsletterSchema),
     defaultValues: {
       email: "",
@@ -99,6 +101,8 @@ const Newsletter: React.FC = () => {
               {errors.email && (
                 <p
                   id="email-error"
+                  role="alert"
+                  aria-live="assertive"
                   className="text-red-500 text-xs mt-1 absolute left-0"
                 >
                   {errors.email.message}

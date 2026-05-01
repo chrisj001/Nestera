@@ -13,17 +13,27 @@ const GoalSchema = z.object({
     .max(50, "Goal name must be less than 50 characters"),
   category: z.string().min(1, "Please select a category"),
   targetAmount: z.coerce
-    .number({
-      invalid_type_error: "Target amount must be a number",
+    .number()
+    .refine((value) => !Number.isNaN(value), {
+      message: "Target amount must be a number",
     })
     .positive("Target amount must be greater than 0"),
-  startingAmount: z.coerce
-    .number({
-      invalid_type_error: "Starting amount must be a number",
-    })
-    .min(0, "Starting amount cannot be negative")
-    .optional(),
-  targetDate: z.string().min(1, "Please select a target date"),
+  startingAmount: z.preprocess(
+    (value) =>
+      value === "" || value === undefined || value === null
+        ? undefined
+        : Number(value),
+    z.number().min(0, "Starting amount cannot be negative"),
+  ).optional(),
+  targetDate: z
+    .string()
+    .min(1, "Please select a target date")
+    .refine((value) => {
+      const date = new Date(`${value}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return !Number.isNaN(date.getTime()) && date >= today;
+    }, "Target date cannot be in the past"),
   frequency: z.string().min(1, "Please select a frequency"),
   description: z.string().max(200, "Note must be less than 200 characters").optional(),
   autoSave: z.boolean().default(false),
@@ -41,6 +51,8 @@ export default function CreateGoalForm() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<GoalValues>({
+    mode: "onTouched",
+    reValidateMode: "onChange",
     resolver: zodResolver(GoalSchema),
     defaultValues: {
       goalName: "",
@@ -217,13 +229,20 @@ export default function CreateGoalForm() {
                   {...register("targetDate")}
                   id="targetDate"
                   type="date"
+                  aria-invalid={errors.targetDate ? "true" : "false"}
+                  aria-describedby={errors.targetDate ? "targetDate-error" : undefined}
                   className={`w-full px-4 py-2.5 rounded-lg bg-[#0F2D2D] border text-[#8C9BAB] focus:border-[#00D9C0] focus:outline-none transition-colors ${
                     errors.targetDate ? "border-red-500/50" : "border-white/10"
                   }`}
                   disabled={isSubmitting}
                 />
                 {errors.targetDate && (
-                  <p className="text-red-500 text-xs mt-1">
+                  <p
+                    id="targetDate-error"
+                    role="alert"
+                    aria-live="assertive"
+                    className="text-red-500 text-xs mt-1"
+                  >
                     {errors.targetDate.message}
                   </p>
                 )}

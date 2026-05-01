@@ -127,6 +127,8 @@ export default function SupportPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<SupportValues>({
+    mode: "onTouched",
+    reValidateMode: "onChange",
     resolver: zodResolver(SupportSchema),
     defaultValues: {
       name: "",
@@ -265,10 +267,16 @@ export default function SupportPage() {
                     }`}
                     placeholder={content.namePlaceholder}
                     aria-invalid={errors.name ? "true" : "false"}
+                    aria-describedby={errors.name ? "name-error" : undefined}
                     disabled={isSubmitting}
                   />
                   {errors.name && (
-                    <p className="text-red-500 text-[10px] mt-1">
+                    <p
+                      id="name-error"
+                      role="alert"
+                      aria-live="assertive"
+                      className="text-red-500 text-[10px] mt-1"
+                    >
                       {errors.name.message}
                     </p>
                   )}
@@ -286,10 +294,16 @@ export default function SupportPage() {
                     }`}
                     placeholder={content.emailPlaceholder}
                     aria-invalid={errors.email ? "true" : "false"}
+                    aria-describedby={errors.email ? "email-error" : undefined}
                     disabled={isSubmitting}
                   />
                   {errors.email && (
-                    <p className="text-red-500 text-[10px] mt-1">
+                    <p
+                      id="email-error"
+                      role="alert"
+                      aria-live="assertive"
+                      className="text-red-500 text-[10px] mt-1"
+                    >
                       {errors.email.message}
                     </p>
                   )}
@@ -310,10 +324,16 @@ export default function SupportPage() {
                     }`}
                     placeholder={content.messagePlaceholder}
                     aria-invalid={errors.message ? "true" : "false"}
+                    aria-describedby={errors.message ? "message-error" : undefined}
                     disabled={isSubmitting}
                   />
                   {errors.message && (
-                    <p className="text-red-500 text-[10px] mt-1">
+                    <p
+                      id="message-error"
+                      role="alert"
+                      aria-live="assertive"
+                      className="text-red-500 text-[10px] mt-1"
+                    >
                       {errors.message.message}
                     </p>
                   )}
